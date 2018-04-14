@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 // import Graph from './components/Graph';
-// import Manipulation from './components/Manipulation';
 import DrawSpace from "./components/DrawSpace";
 // import Panel from "./components/Panel";
 
@@ -16,7 +15,6 @@ class App extends Component {
             nodes: []
         };
 
-        this.handleChangeId = this.handleChangeId.bind(this);
         this.handleChangeWeight = this.handleChangeWeight.bind(this);
         this.handleCreateNode = this.handleCreateNode.bind(this);
         this.resetInputs = this.resetInputs.bind(this);
@@ -24,12 +22,6 @@ class App extends Component {
 
         this.updateNode = this.updateNode.bind(this);
         this.deleteNode = this.deleteNode.bind(this);
-    }
-
-    handleChangeId(e) {
-        this.setState({
-            id: e.target.value
-        });
     }
 
     handleChangeWeight(e) {
@@ -115,26 +107,6 @@ class App extends Component {
                         id="node-weight"
                         placeholder="Type weight"
                         onChange={(e) => this.handleChangeWeight(e)}
-                      />
-                      <button
-                        className="btn"
-                        type="submit"
-                        onClick={this.handleCreateNode}
-                      >
-                          Create Node
-                      </button>
-                  </div>
-              </div>
-
-              <div className="form-control add-edge-form">
-                  <label htmlFor="edge-weigth" className="form-title">Add Edge</label>
-                  <div className="row">
-                      <input
-                        className="input"
-                        ref={ref => this.inputEdgeWeight = ref}
-                        id="edge-weight"
-                        placeholder="Type weight"
-                        // onChange={(e) => this.handleChangeEdgeWeight(e)}
                       />
                       <button
                         className="btn"

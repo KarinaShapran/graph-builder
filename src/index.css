@@ -45,7 +45,7 @@ body {
   right: 60px;
 }
 
-.update-form {
+.add-edge-form, .update-form {
   position: absolute;
   top: 200px;
   right: 60px;
