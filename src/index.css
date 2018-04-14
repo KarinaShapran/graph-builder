@@ -1,0 +1,119 @@
+* {
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+html {
+  font-family: Helvetica,Arial,sans-serif;
+  font-size: 100%;
+  line-height: 100%;
+  color: #6f749a;
+  font-weight: 300;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #eff4f7;
+}
+#mynetwork {
+  background-color: #fff;
+  width: 800px;
+  height: 500px;
+  border: 2px solid #e5e7f1;
+  border-radius: .625rem;
+  margin: 20px;
+  padding: 2px;
+}
+.form-title {
+  display: block;
+  width: 100%;
+  text-align: center;
+}
+.form-control{
+  max-width: 300px;
+  background-color: #fff;
+  float: right;
+  margin: 0 20px;
+  box-shadow: 0 0.375rem 1.25rem 0 rgba(61,66,80,.18);
+  border-radius: .625rem;
+  padding: 20px;
+}
+.add-node-form {
+  position: absolute;
+  top: 20px;
+  right: 60px;
+}
+
+.update-form {
+  position: absolute;
+  top: 200px;
+  right: 60px;
+}
+
+.row {
+  width: 100%;
+  margin-top: 10px;
+}
+.input {
+  color: #6f749a;
+  font: 1rem/2.5rem Helvetica,Arial,sans-serif;
+  width: 120px;
+  height: 46px;
+  border-radius: 8px 0px 0px 8px;
+  border: 0;
+  -webkit-box-shadow: inset 0 0 0 1px #ced0d9;
+  box-shadow: inset 0 0 0 1px #ced0d9;
+  padding: 7px 15px;
+  font-family: Helvetica,Arial,sans-serif;
+  font-weight: 300;
+  -webkit-transition: all .3s ease;
+  transition: all .3s ease;
+  -webkit-appearance: none;
+  vertical-align: middle;
+}
+
+input:active, input:focus {
+  -webkit-box-shadow: inset 0 0 0 2px #3ecadd, 0 0.0625rem 0.25rem 0 rgba(61, 66, 80, .18);
+  box-shadow: inset 0 0 0 2px #3ecadd, 0 0.0625rem 0.25rem 0 rgba(61, 66, 80, .18);
+  outline: 0;
+}
+
+.btn {
+  font: 1rem/2.5rem Helvetica,Arial,sans-serif;
+  background-color: #3ecadd;
+  border: 2px solid #3ecadd;
+  color: #fff;
+  height: 46px;
+  border-radius: 0px 8px 8px 0px;
+  line-height: 46px;
+  padding: 0 20px;
+  min-width: 105px;
+  font-weight: 400;
+  transition: .2s;
+  text-align: center;
+  outline: none;
+  cursor: pointer;
+  text-decoration: none;
+  vertical-align: middle;
+}
+
+.btn.purple {
+  background-color: #784e8c;
+  border: 2px solid #88589f;
+}
+#network-popUp {
+  position:absolute;
+  top:100px;
+  right:0px;
+  z-index:299;
+  width:250px;
+  height:120px;
+  background-color: #f9f9f9;
+  border-style:solid;
+  border-width:3px;
+  border-color: #5394ed;
+  padding:10px;
+  text-align: center;
+}
+
