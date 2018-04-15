@@ -67,7 +67,7 @@ export default class DrawSpace extends Component {
         const self = this;
 
         const options = {
-            locale: 'ru',
+            locale: 'en',
             autoResize: false,
             height: '100%',
             width: '100%',
@@ -99,7 +99,12 @@ export default class DrawSpace extends Component {
 
                 //Adding Edge
                 addEdge: (edgeData, callback) => {
-                    if (edgeData.from === edgeData.to) {
+                    if (this.state.edges.find(edge => (
+                            (edge.from === edgeData.from && edge.to === edgeData.to) ||
+                                (edge.from === edgeData.to && edge.to === edgeData.from) ))){
+                        self.renderMessage("Can't connect selected nodes twice");
+                        callback(null);
+                    } else if (edgeData.from === edgeData.to) {
                         self.renderMessage("Can't connect the node to itself");
                         callback(null);
                     } else {
@@ -169,7 +174,8 @@ export default class DrawSpace extends Component {
             isActiveNodeUpdateForm: !this.state.isActiveNodeUpdateForm,
             nodeForUpdate: {
                 id: node.id,
-                label: node.label
+                label: node.label,
+                title: node.title
             }
         }, () => callback());
     }
@@ -248,7 +254,7 @@ export default class DrawSpace extends Component {
             to: edge.to
         };
 
-        const edges = this.state.edges.filter((e) => e.id !== edge.id);
+        const edges = this.state.edges.filter(e => e.id !== edge.id);
 
         const updatedEdges = [...edges, updatedEdge].sort((a, b) => {
             const aId = a.id;

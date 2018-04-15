@@ -31,12 +31,13 @@ class App extends Component {
     handleCreateNode() {
         this.setState({
             nodes: [...this.state.nodes, {
-                id: this.state.id++,
-                label: this.state.weight
+                id: this.state.id,
+                label: this.state.weight,
+                title: this.state.id
             }]
         }, () => {
-            // console.log("App", this.state.nodes);
-            this.resetInputs()
+            this.state.id++;
+            this.resetInputs();
         });
     }
 
@@ -48,7 +49,8 @@ class App extends Component {
     updateNode(node, callback) {
         let updatedNode = {
             id: node.id,
-            label: node.label
+            label: node.label,
+            title: node.title
         };
 
         const nodes = this.state.nodes.filter((n) => n.id !== node.id);
