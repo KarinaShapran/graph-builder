@@ -1,7 +1,5 @@
-import React, { Component } from 'react';
-// import Graph from './components/Graph';
+import React, {Component} from 'react';
 import DrawSpace from "./components/DrawSpace";
-// import Panel from "./components/Panel";
 
 import './index.css';
 
@@ -18,7 +16,7 @@ class App extends Component {
         this.handleChangeWeight = this.handleChangeWeight.bind(this);
         this.handleCreateNode = this.handleCreateNode.bind(this);
         this.resetInputs = this.resetInputs.bind(this);
-        this.updateNodes = this.updateNodes.bind(this);
+        // this.updateNodes = this.updateNodes.bind(this);
 
         this.updateNode = this.updateNode.bind(this);
         this.deleteNode = this.deleteNode.bind(this);
@@ -43,10 +41,7 @@ class App extends Component {
     }
 
     resetInputs() {
-        this.setState({
-            weight: null
-        });
-
+        this.setState({weight: null});
         this.inputNodeWeight.value = "";
     }
 
@@ -56,11 +51,9 @@ class App extends Component {
             label: node.label
         };
 
-        let nodes = this.state.nodes.filter( function( obj ) {
-            return obj.id !== node.id;
-        });
+        const nodes = this.state.nodes.filter((n) => n.id !== node.id);
 
-        let updatedNodes = [...nodes, updatedNode].sort( (a,b) => {
+        const updatedNodes = [...nodes, updatedNode].sort((a, b) => {
             const aId = a.id;
             const bId = b.id;
 
@@ -69,20 +62,19 @@ class App extends Component {
 
         this.setState({
             nodes: updatedNodes
-        }, () => callback() );
+        }, () => callback());
     }
 
-    updateNodes(data) {
-        const nodes = Object.keys(data).map((key) => {
-            console.log("Update node", data[key]);
-            return data[key]
-        });
-    }
+    // updateNodes(data) {
+    //     const nodes = Object.keys(data).map((key) => {
+    //         console.log("Update node", data[key]);
+    //         return data[key]
+    //     });
+    // }
 
-    deleteNode(nodeId) {
-        const updatedNodes = this.state.nodes.filter( function( obj ) {
-            return obj.id !== nodeId;
-        });
+    deleteNode(nodes) {
+        const nodeId = nodes[0];
+        const updatedNodes = this.state.nodes.filter((node) => node.id !== nodeId);
 
         this.setState({
             nodes: updatedNodes
@@ -96,7 +88,7 @@ class App extends Component {
                 nodes={this.state.nodes}
                 updateNode={this.updateNode}
                 deleteNode={this.deleteNode}
-                updateNodes={this.updateNodes}
+                //updateNodes={this.updateNodes}
               />
               <div className="form-control add-node-form">
                   <label htmlFor="node-weigth" className="form-title">Add Node {this.state.id}</label>
