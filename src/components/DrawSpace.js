@@ -8,8 +8,6 @@ export default class DrawSpace extends Component {
         super();
 
         this.state = {
-            network: null,
-
             //Edge label
             label: "",
             //Edge ID
@@ -159,9 +157,6 @@ export default class DrawSpace extends Component {
         const data = {nodes: nodes, edges: edges};
         const container = document.getElementById('mynetwork');
         const network = new vis.Network(container, data, options);
-        this.setState({
-            network: network
-        });
         //this.props.updateNodes(network.body.data.nodes._data);
     }
 
