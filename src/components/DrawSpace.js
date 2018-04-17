@@ -15,10 +15,6 @@ export default class DrawSpace extends Component {
             edges: [],
             idEdit: null,
 
-            nodeForUpdate: {
-                id: "",
-                label: ""
-            },
             edgeForUpdate: {
                 id: "",
                 from: "",
@@ -26,28 +22,21 @@ export default class DrawSpace extends Component {
                 label: ""
             },
 
-            isActiveNodeUpdateForm: false,
             isActiveAddEdgeForm: false,
-            isActiveMessageForm: false,
             isActiveEditEdgeForm: false,
-            message: "",
 
             exportValue: ""
         };
 
         this.drawGraph = this.drawGraph.bind(this);
 
-        this.renderMessage = this.renderMessage.bind(this);
-        this.renderEditNodeForm = this.renderEditNodeForm.bind(this);
         this.renderAddEdgeForm = this.renderAddEdgeForm.bind(this);
         this.renderEditEdgeForm = this.renderEditEdgeForm.bind(this);
 
-        this.onCloseEditNodeForm = this.onCloseEditNodeForm.bind(this);
         this.onCloseAddEdgeForm = this.onCloseAddEdgeForm.bind(this);
         this.onCloseEditEdgeForm = this.onCloseEditEdgeForm.bind(this);
 
         this.handleCreateEdge = this.handleCreateEdge.bind(this);
-        this.handleClickOK = this.handleClickOK.bind(this);
         this.handleExportGraph = this.handleExportGraph.bind(this);
         this.handleImportGraph = this.handleImportGraph.bind(this);
 
@@ -97,10 +86,10 @@ export default class DrawSpace extends Component {
 
                 // Editing Node
                 editNode: (data, callback) => {
-                    self.renderEditNodeForm(data, () =>
+                    self.props.renderEditNodeForm(data, () =>
                       document.getElementById('update-node-btn').onclick = () => {
-                          self.saveEditedNodeData(data, self.inputUpdate, callback);
-                          self.props.updateNode(data, self.onCloseEditNodeForm);
+                          self.props.saveEditedNodeData(data, callback);
+                          self.props.updateNode(data);
                       }
                     );
                 },
@@ -110,10 +99,10 @@ export default class DrawSpace extends Component {
                     if (this.state.edges.find(edge => (
                             (edge.from === edgeData.from && edge.to === edgeData.to) ||
                                 (edge.from === edgeData.to && edge.to === edgeData.from) ))){
-                        self.renderMessage("Can't connect selected nodes twice");
+                        self.props.renderMessage("Can't connect selected nodes twice");
                         callback(null);
                     } else if (edgeData.from === edgeData.to) {
-                        self.renderMessage("Can't connect the node to itself");
+                        self.props.renderMessage("Can't connect the node to itself");
                         callback(null);
                     } else {
                         self.renderAddEdgeForm(edgeData, () => {
@@ -158,45 +147,6 @@ export default class DrawSpace extends Component {
         const container = document.getElementById('mynetwork');
         const network = new vis.Network(container, data, options);
         //this.props.updateNodes(network.body.data.nodes._data);
-    }
-
-    //ERROR MESSAGES
-    renderMessage(text) {
-        this.setState({
-            isActiveMessageForm: !this.state.isActiveMessageForm,
-            message: text
-        });
-    }
-
-    handleClickOK() {
-        this.setState({
-            message: "",
-            isActiveMessageForm: !this.state.isActiveMessageForm
-        });
-    }
-
-    //EDIT NODE METHODS
-    renderEditNodeForm(node, callback) {
-        this.setState({
-            isActiveNodeUpdateForm: !this.state.isActiveNodeUpdateForm,
-            nodeForUpdate: {
-                id: node.id,
-                label: node.label,
-                title: node.title
-            }
-        }, () => callback());
-    }
-
-    saveEditedNodeData(data, ref, callback) {
-        data.label = ref.value;
-        callback(data);
-    }
-
-    onCloseEditNodeForm() {
-        this.setState({
-            isActiveNodeUpdateForm: !this.state.isActiveNodeUpdateForm
-        });
-        this.inputUpdate.value = "";
     }
 
     //ADD EDGE METHODS
@@ -341,10 +291,9 @@ export default class DrawSpace extends Component {
             this.props.setNodes(nodes);
             this.setState({edges: edges});
         } else {
-            this.renderMessage("Please, paste the data from the file into the area");
+            this.props.renderMessage("Please, paste the data from the file into the area");
         }
     }
-
 
     handleClearArea() {
         this.setState({exportValue: ""});
@@ -353,56 +302,13 @@ export default class DrawSpace extends Component {
     render() {
         const {
             idEdit,
-            message,
-            isActiveNodeUpdateForm,
             isActiveAddEdgeForm,
-            isActiveMessageForm,
             isActiveEditEdgeForm,
             exportValue
         } = this.state;
 
         return (
           <div className="workspace-wrapper">
-              {
-                  isActiveMessageForm
-                    ? <div className="form-control message-popup">
-                        <span className="messages">{message}</span>
-                        <button
-                          id="ok-btn"
-                          className="btn purple"
-                          type="submit"
-                          onClick={this.handleClickOK}
-                        >
-                            OK
-                        </button>
-                    </div>
-                    : null
-              }
-
-              {
-                  isActiveNodeUpdateForm
-                    ? <div className="form-control update-form">
-                        <span className="form-title">Update Node {this.state.nodeForUpdate.id}</span>
-
-                        <div className="row">
-                            <input
-                              id="label"
-                              className="input purple"
-                              ref={ref => this.inputUpdate = ref}
-                              placeholder="Type weight"
-                            />
-                            <button
-                              id="update-node-btn"
-                              className="btn purple"
-                              type="submit"
-                            >
-                                Update Node
-                            </button>
-                        </div>
-                    </div>
-                    : null
-              }
-
               {
                   isActiveAddEdgeForm
                     ? <div className="form-control add-edge-form">

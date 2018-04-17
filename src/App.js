@@ -9,23 +9,57 @@ class App extends Component {
 
         this.state = {
             id: 0,
-            weight: null,
-            nodes: []
+            nodeWeight: null,
+            nodes: [],
+            edges: [],
+            nodeForUpdate: {
+                id: "",
+                label: ""
+            },
+            stringNodes: "",
+
+            isActiveNodeUpdateForm: false,
+            isActiveMessageForm: false,
+            message: ""
         };
 
-        this.handleChangeWeight = this.handleChangeWeight.bind(this);
+        this.handleChangeNodeWeight = this.handleChangeNodeWeight.bind(this);
         this.handleCreateNode = this.handleCreateNode.bind(this);
+
         this.resetInputs = this.resetInputs.bind(this);
-        // this.updateNodes = this.updateNodes.bind(this);
+
+        this.renderMessage = this.renderMessage.bind(this);
+        this.handleClickOK = this.handleClickOK.bind(this);
+
+        this.onCloseEditNodeForm = this.onCloseEditNodeForm.bind(this);
+        this.renderEditNodeForm = this.renderEditNodeForm.bind(this);
 
         this.updateNode = this.updateNode.bind(this);
         this.deleteNode = this.deleteNode.bind(this);
         this.setNodes = this.setNodes.bind(this);
+        this.showNodes = this.showNodes.bind(this);
+
+        this.saveEditedNodeData = this.saveEditedNodeData.bind(this);
     }
 
-    handleChangeWeight(e) {
+    //ERROR MESSAGES
+    renderMessage(text) {
         this.setState({
-            weight: e.target.value
+            isActiveMessageForm: !this.state.isActiveMessageForm,
+            message: text
+        });
+    }
+
+    handleClickOK() {
+        this.setState({
+            message: "",
+            isActiveMessageForm: !this.state.isActiveMessageForm
+        });
+    }
+
+    handleChangeNodeWeight(e) {
+        this.setState({
+            nodeWeight: e.target.value
         });
     }
 
@@ -33,21 +67,46 @@ class App extends Component {
         this.setState({
             nodes: [...this.state.nodes, {
                 id: this.state.id,
-                label: this.state.weight,
+                label: this.state.nodeWeight,
                 title: this.state.id
             }],
             id: this.state.id + 1
         }, () => {
             this.resetInputs();
+            this.showNodes(this.state.nodes);
         });
     }
 
     resetInputs() {
-        this.setState({weight: null});
+        this.setState({nodeWeight: null});
         this.inputNodeWeight.value = "";
     }
 
-    updateNode(node, callback) {
+    //EDIT NODE METHODS
+    renderEditNodeForm(node, callback) {
+        this.setState({
+            isActiveNodeUpdateForm: !this.state.isActiveNodeUpdateForm,
+            nodeForUpdate: {
+                id: node.id,
+                label: node.label,
+                title: node.title
+            }
+        }, () => callback());
+    }
+
+    saveEditedNodeData(data, callback) {
+        data.label = this.inputNodeEdit.value;
+        callback(data);
+    }
+
+    onCloseEditNodeForm() {
+        this.setState({
+            isActiveNodeUpdateForm: !this.state.isActiveNodeUpdateForm
+        });
+        this.inputNodeEdit.value = "";
+    }
+
+    updateNode(node) {
         let updatedNode = {
             id: node.id,
             label: node.label,
@@ -65,15 +124,11 @@ class App extends Component {
 
         this.setState({
             nodes: updatedNodes
-        }, () => callback());
+        }, () => {
+            this.onCloseEditNodeForm();
+            this.showNodes(this.state.nodes);
+        });
     }
-
-    // updateNodes(data) {
-    //     const nodes = Object.keys(data).map((key) => {
-    //         console.log("Update node", data[key]);
-    //         return data[key]
-    //     });
-    // }
 
     deleteNode(nodes) {
         const nodeId = nodes[0];
@@ -92,17 +147,82 @@ class App extends Component {
             id: maxId + 1
         })
     }
+
+    showNodes(obj) {
+        const stringData = JSON.stringify(obj);
+        this.setState({
+            stringNodes: stringData
+        })
+    }
+
     render() {
+        const {
+            message,
+            isActiveNodeUpdateForm,
+            // isActiveAddEdgeForm,
+            isActiveMessageForm
+            // isActiveEditEdgeForm,
+            // exportValue
+        } = this.state;
+
         return (
           <div className="App">
+              <div className="forms-wrapper">
+                  {
+                      isActiveMessageForm
+                        ? <div className="form-control message-popup">
+                            <span className="messages">{message}</span>
+                            <button
+                              id="ok-btn"
+                              className="btn purple"
+                              type="submit"
+                              onClick={this.handleClickOK}
+                            >
+                                OK
+                            </button>
+                        </div>
+                        : null
+                  }
+                  {
+                      isActiveNodeUpdateForm
+                        ? <div className="form-control update-form">
+                            <span className="form-title">Update Node {this.state.nodeForUpdate.id}</span>
+
+                            <div className="row">
+                                <input
+                                  id="label"
+                                  className="input purple"
+                                  ref={ref => this.inputNodeEdit = ref}
+                                  placeholder="Type weight"
+                                />
+                                <button
+                                  id="update-node-btn"
+                                  className="btn purple"
+                                  type="submit"
+                                >
+                                    Update Node
+                                </button>
+                            </div>
+                        </div>
+                        : null
+                  }
+              </div>
               <DrawSpace
                 nodes={this.state.nodes}
+                edges={this.state.edges}
+
                 updateNode={this.updateNode}
                 deleteNode={this.deleteNode}
 
                 setNodes={this.setNodes}
-                //updateNodes={this.updateNodes}
+
+                renderMessage={this.renderMessage}
+
+                saveEditedNodeData={this.saveEditedNodeData}
+                renderEditNodeForm={this.renderEditNodeForm}
               />
+              <textarea id="import-area" value={this.state.stringNodes}/>
+
               <div className="form-control add-node-form">
                   <label htmlFor="node-weigth" className="form-title">Add Node {this.state.id}</label>
                   <div className="row">
@@ -111,7 +231,7 @@ class App extends Component {
                         ref={ref => this.inputNodeWeight = ref}
                         id="node-weight"
                         placeholder="Type weight"
-                        onChange={(e) => this.handleChangeWeight(e)}
+                        onChange={(e) => this.handleChangeNodeWeight(e)}
                       />
                       <button
                         className="btn"
