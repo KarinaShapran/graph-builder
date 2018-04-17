@@ -22,7 +22,6 @@ body {
   height: 500px;
   border: 2px solid #e5e7f1;
   border-radius: .625rem;
-  margin: 20px;
   padding: 2px;
 }
 .form-title {
@@ -34,7 +33,7 @@ body {
   max-width: 300px;
   background-color: #fff;
   float: right;
-  margin: 0 20px;
+  /*margin: 0 20px;*/
   box-shadow: 0 0.375rem 1.25rem 0 rgba(61,66,80,.18);
   border-radius: .625rem;
   padding: 20px;
@@ -55,17 +54,15 @@ body {
   right: 20px;
 }
 
-/*.export-form {*/
-  /*position: absolute;*/
-  /*bottom: 20px;*/
-  /*right: 20px;*/
-/*}*/
+.export-form {
+  margin-bottom: 20px;
+}
 
 .row {
   width: 100%;
   margin-top: 10px;
 }
-.input, #import-area {
+.input, .area {
   color: #6f749a;
   font: 1rem/2.5rem Helvetica,Arial,sans-serif;
   width: 120px;
@@ -114,6 +111,11 @@ input:active, input:focus {
   vertical-align: middle;
 }
 
+.btn.blue {
+  background-color: #3ecadd;
+  border: 2px solid #3ecadd;
+}
+
 .btn.purple {
   background-color: #784e8c;
   border: 2px solid #88589f;
@@ -129,6 +131,23 @@ input:active, input:focus {
   border: 2px solid #aeec73;
 }
 
+.tabs-container {
+  padding: 10px 20px;
+}
+
+.tab-link {
+  color: #6f749a;
+  border: none;
+  background: transparent;
+  border-radius: initial;
+  transition: all .1s ease-in;
+}
+
+.tab-link.active {
+  border-bottom: 2px solid #88589f;
+  color: #88589f;
+}
+
 .messages {
   display: inline-block;
   color: red;
@@ -137,7 +156,7 @@ input:active, input:focus {
   margin-bottom: 10px;
 }
 
-#ok-btn, #import-btn, #export-btn, #import-area {
+#ok-btn, #import-btn, #export-btn, .area {
   border-radius: 8px;
   margin: 0 auto;
 }
@@ -162,7 +181,7 @@ input:active, input:focus {
   margin-left: 10px;
 }
 
-#import-area {
+.area {
   overflow: scroll;
   width: 260px;
   height: 300px;
@@ -195,4 +214,13 @@ input:active, input:focus {
 .clear:hover {
   cursor: pointer;
   color: #3ecadd;
+}
+
+.content-container {
+  padding: 0 20px;
+}
+
+.title {
+  line-height: 1;
+  text-transform: capitalize;
 }

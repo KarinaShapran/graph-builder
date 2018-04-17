@@ -8,7 +8,10 @@ export default class DrawSpace extends Component {
         super();
 
         this.state = {
-            exportValue: ""
+            exportValue: "",
+
+            stringNodes: "",
+            stringEdges: ""
         };
 
         this.drawGraph = this.drawGraph.bind(this);
@@ -18,15 +21,27 @@ export default class DrawSpace extends Component {
         this.download = this.download.bind(this);
         this.handleChangeImportArea = this.handleChangeImportArea.bind(this);
         this.handleClearArea = this.handleClearArea.bind(this);
+
+        this.showNodes = this.showNodes.bind(this);
+        this.showEdges = this.showEdges.bind(this);
     }
 
     componentDidMount() {
         this.drawGraph(this.props.nodes, this.props.edges);
+        this.showEdges(this.props.edges);
+        this.showNodes(this.props.nodes);
+        this.setState({exportValue: ""});
     }
 
     componentDidUpdate(prevProps) {
         if (prevProps.nodes !== this.props.nodes || prevProps.edges !== this.props.edges) {
             this.drawGraph(this.props.nodes, this.props.edges);
+        }
+        if (prevProps.nodes !== this.props.nodes) {
+            this.showNodes(this.props.nodes);
+        }
+        if (prevProps.edges !== this.props.edges) {
+            this.showEdges(this.props.edges);
         }
     }
 
@@ -129,12 +144,11 @@ export default class DrawSpace extends Component {
         const data = {nodes: nodes, edges: edges};
         const container = document.getElementById('mynetwork');
         const network = new vis.Network(container, data, options);
-        //this.props.updateNodes(network.body.data.nodes._data);
     }
 
     //EXPORT / IMPORT
     handleExportGraph() {
-        const exportArea = document.getElementById('import-area');
+        //const exportArea = document.getElementById('import-area');
 
         const data = [
           this.props.nodes,
@@ -161,15 +175,13 @@ export default class DrawSpace extends Component {
     }
 
     handleImportGraph() {
-        const exportArea = document.getElementById('import-area');
-
-        const inputValue = exportArea.value;
+        const importArea = document.getElementById('import-area');
+        const inputValue = importArea.value;
 
         if (inputValue) {
             const inputData = JSON.parse(inputValue);
-
             const nodes = inputData[0],
-              edges = inputData[1];
+                  edges = inputData[1];
 
             this.props.setNodes(nodes);
             this.props.setEdges(edges);
@@ -182,12 +194,26 @@ export default class DrawSpace extends Component {
         this.setState({exportValue: ""});
     }
 
+    showNodes(obj) {
+        const stringData = JSON.stringify(obj);
+        this.setState({stringNodes: stringData});
+    }
+
+    showEdges(obj) {
+        const stringData = JSON.stringify(obj);
+        this.setState({stringEdges: stringData});
+    }
+
     render() {
-        const {exportValue} = this.state;
+        const {exportValue, stringNodes, stringEdges} = this.state;
 
         return (
           <div className="workspace-wrapper">
               <div id="mynetwork"></div>
+
+              <textarea className="area" value={stringNodes}/>
+              <textarea className="area" value={stringEdges}/>
+
               <div className="form-control export-form">
                   <button
                     id="export-btn"
@@ -206,7 +232,7 @@ export default class DrawSpace extends Component {
                       Import
                   </button>
                   <span className="info">Paste the data from the exported file into the area below.</span>
-                  <textarea id="import-area" value={exportValue} onChange={this.handleChangeImportArea}/>
+                  <textarea id="import-area" className="area" value={exportValue} onChange={this.handleChangeImportArea}/>
                   <span className="clear" onClick={this.handleClearArea}>Clear Area</span>
               </div>
           </div>
