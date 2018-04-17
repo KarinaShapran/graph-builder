@@ -8,6 +8,8 @@ export default class DrawSpace extends Component {
         super();
 
         this.state = {
+            network: null,
+
             //Edge label
             label: "",
             //Edge ID
@@ -30,7 +32,9 @@ export default class DrawSpace extends Component {
             isActiveAddEdgeForm: false,
             isActiveMessageForm: false,
             isActiveEditEdgeForm: false,
-            message: ""
+            message: "",
+
+            exportValue: ""
         };
 
         this.drawGraph = this.drawGraph.bind(this);
@@ -46,10 +50,16 @@ export default class DrawSpace extends Component {
 
         this.handleCreateEdge = this.handleCreateEdge.bind(this);
         this.handleClickOK = this.handleClickOK.bind(this);
+        this.handleExportGraph = this.handleExportGraph.bind(this);
+        this.handleImportGraph = this.handleImportGraph.bind(this);
 
         this.updateEdge = this.updateEdge.bind(this);
         this.deleteEdge = this.deleteEdge.bind(this);
         this.deleteEdges = this.deleteEdges.bind(this);
+
+        this.download = this.download.bind(this);
+        this.handleChangeImportArea = this.handleChangeImportArea.bind(this);
+        this.handleClearArea = this.handleClearArea.bind(this);
     }
 
     componentDidMount() {
@@ -149,7 +159,9 @@ export default class DrawSpace extends Component {
         const data = {nodes: nodes, edges: edges};
         const container = document.getElementById('mynetwork');
         const network = new vis.Network(container, data, options);
-
+        this.setState({
+            network: network
+        });
         //this.props.updateNodes(network.body.data.nodes._data);
     }
 
@@ -207,7 +219,7 @@ export default class DrawSpace extends Component {
 
     handleCreateEdge(data, callback, defaultCallback) {
         data.label = this.state.label;
-        data.id = this.state.id++;
+        data.id = this.state.id;
 
         this.setState({
             edges: [...this.state.edges, {
@@ -215,7 +227,8 @@ export default class DrawSpace extends Component {
                 label: this.state.label,
                 from: data.from,
                 to: data.to
-            }]
+            }],
+            id: this.state.id + 1
         }, () => {
             callback();
             defaultCallback(data);
@@ -291,6 +304,57 @@ export default class DrawSpace extends Component {
         this.setState({edges: updatedEdges});
     }
 
+    //EXPORT / IMPORT
+    handleExportGraph() {
+        const exportArea = document.getElementById('import-area');
+
+        const data = [
+          this.props.nodes,
+          this.state.edges
+        ];
+
+        const exportValue = JSON.stringify(data, undefined, 2);
+
+        this.setState({exportValue: exportValue});
+
+        this.download(exportValue, 'json.txt', 'text/plain');
+    }
+
+    download(content, fileName, contentType) {
+        const a = document.createElement("a");
+        const file = new Blob([content], {type: contentType});
+        a.href = URL.createObjectURL(file);
+        a.download = fileName;
+        a.click();
+    }
+
+    handleChangeImportArea(e) {
+        this.setState({exportValue: e.target.value});
+    }
+
+    handleImportGraph() {
+        const exportArea = document.getElementById('import-area');
+
+        const inputValue = exportArea.value;
+
+        if (inputValue) {
+            const inputData = JSON.parse(inputValue);
+
+            const nodes = inputData[0],
+              edges = inputData[1];
+
+            this.props.setNodes(nodes);
+            this.setState({edges: edges});
+        } else {
+            this.renderMessage("Please, paste the data from the file into the area");
+        }
+    }
+
+
+    handleClearArea() {
+        this.setState({exportValue: ""});
+    }
+
     render() {
         const {
             idEdit,
@@ -298,7 +362,8 @@ export default class DrawSpace extends Component {
             isActiveNodeUpdateForm,
             isActiveAddEdgeForm,
             isActiveMessageForm,
-            isActiveEditEdgeForm
+            isActiveEditEdgeForm,
+            exportValue
         } = this.state;
 
         return (
@@ -392,6 +457,27 @@ export default class DrawSpace extends Component {
               }
 
               <div id="mynetwork"></div>
+              <div className="form-control export-form">
+                  <button
+                    id="export-btn"
+                    className="btn grey"
+                    type="submit"
+                    onClick={this.handleExportGraph}
+                  >
+                      Export
+                  </button>
+                  <button
+                    id="import-btn"
+                    className="btn purple"
+                    type="submit"
+                    onClick={this.handleImportGraph}
+                  >
+                      Import
+                  </button>
+                  <span className="info">Paste the data from the exported file into the area below.</span>
+                  <textarea id="import-area" value={exportValue} onChange={this.handleChangeImportArea}/>
+                  <span className="clear" onClick={this.handleClearArea}>Clear Area</span>
+              </div>
           </div>
         );
     }

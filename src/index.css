@@ -39,10 +39,11 @@ body {
   border-radius: .625rem;
   padding: 20px;
 }
+
 .add-node-form {
   position: absolute;
   top: 20px;
-  right: 60px;
+  right: 20px;
 }
 
 .add-edge-form,
@@ -51,14 +52,20 @@ body {
 .edit-edge-form {
   position: absolute;
   top: 200px;
-  right: 60px;
+  right: 20px;
 }
+
+/*.export-form {*/
+  /*position: absolute;*/
+  /*bottom: 20px;*/
+  /*right: 20px;*/
+/*}*/
 
 .row {
   width: 100%;
   margin-top: 10px;
 }
-.input {
+.input, #import-area {
   color: #6f749a;
   font: 1rem/2.5rem Helvetica,Arial,sans-serif;
   width: 120px;
@@ -112,12 +119,80 @@ input:active, input:focus {
   border: 2px solid #88589f;
 }
 
-.messages {
-  font: 1rem/2.5rem Helvetica,Arial,sans-serif;
-  color: red;
+.btn.grey {
+  background-color: #a3abc5;
+  border: 2px solid #a3abc5;
 }
 
-#ok-btn {
+.btn.green {
+  background-color: #aeec73;
+  border: 2px solid #aeec73;
+}
+
+.messages {
+  display: inline-block;
+  color: red;
+  font-size: 16px;
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+#ok-btn, #import-btn, #export-btn, #import-area {
   border-radius: 8px;
   margin: 0 auto;
+}
+
+#ok-btn:hover, #import-btn:hover, #export-btn:hover {
+  -webkit-transform: translateY(-3px);
+  transform: translateY(-3px);
+  -webkit-box-shadow: 0 1px 4px 0 rgba(61, 66, 80, .18);
+  box-shadow: 0 1px 4px 0 rgba(61, 66, 80, .18);
+  position: relative;
+}
+
+#import-btn, #export-btn {
+  width: 120px;
+}
+
+#export-btn {
+  margin-right: 10px;
+}
+
+#import-btn {
+  margin-left: 10px;
+}
+
+#import-area {
+  overflow: scroll;
+  width: 260px;
+  height: 300px;
+  margin-top: 10px;
+  line-height: 1.5;
+}
+
+#import-area:active, #import-area:focus {
+  -webkit-box-shadow: inset 0 0 0 2px #784e8c, 0 0.0625rem 0.25rem 0 rgba(61, 66, 80, .18);
+  box-shadow: inset 0 0 0 2px #784e8c, 0 0.0625rem 0.25rem 0 rgba(61, 66, 80, .18);
+  outline: 0;
+}
+
+.clear {
+  display: inline-block;
+  margin-top: 10px;
+  font: 1rem/2.5rem Helvetica,Arial,sans-serif;
+  color: #3ecadd;
+  text-decoration: underline;
+  line-height: 1;
+}
+
+.info {
+  font-size: 14px;
+  color: #784e8c;
+  line-height: 1.5;
+  display: inline-block;
+  margin-top: 10px;
+}
+.clear:hover {
+  cursor: pointer;
+  color: #3ecadd;
 }

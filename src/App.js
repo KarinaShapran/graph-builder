@@ -20,6 +20,7 @@ class App extends Component {
 
         this.updateNode = this.updateNode.bind(this);
         this.deleteNode = this.deleteNode.bind(this);
+        this.setNodes = this.setNodes.bind(this);
     }
 
     handleChangeWeight(e) {
@@ -34,9 +35,9 @@ class App extends Component {
                 id: this.state.id,
                 label: this.state.weight,
                 title: this.state.id
-            }]
+            }],
+            id: this.state.id + 1
         }, () => {
-            this.state.id++;
             this.resetInputs();
         });
     }
@@ -83,6 +84,14 @@ class App extends Component {
         });
     }
 
+    setNodes(nodes) {
+        const maxId = nodes[nodes.length - 1].id;
+
+        this.setState({
+            nodes,
+            id: maxId + 1
+        })
+    }
     render() {
         return (
           <div className="App">
@@ -90,6 +99,8 @@ class App extends Component {
                 nodes={this.state.nodes}
                 updateNode={this.updateNode}
                 deleteNode={this.deleteNode}
+
+                setNodes={this.setNodes}
                 //updateNodes={this.updateNodes}
               />
               <div className="form-control add-node-form">
