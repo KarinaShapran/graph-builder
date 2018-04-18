@@ -62,14 +62,51 @@ export default class DrawSpace extends Component {
 
         } = self.props;
 
+        let nodesOptions = {};
+
+        if (this.props.graphType === 'system') {
+            nodesOptions = {
+                shape: "box",
+                shapeProperties: {
+                    borderRadius: 0
+                },
+                color: {
+                    border: '#784e8c',
+                    background: '#d7c6df',
+                    highlight: {
+                        border: '#402a4b',
+                        background: '#f6f2f8'
+                    },
+                    hover: {
+                        border: '#784e8c',
+                        background: '#d7c6df'
+                    }
+                }
+            };
+        } else {
+            nodesOptions = {
+                shape: "ellipse",
+                color: {
+                    border: '#3ecadd',
+                    background: '#c0eef4',
+                    highlight: {
+                        border: '#20a5b7',
+                        background: '#ebfafc'
+                    },
+                    hover: {
+                        border: '#3ecadd',
+                        background: '#c0eef4'
+                    }
+                }
+            };
+        }
+
         const options = {
             locale: 'en',
             autoResize: false,
             height: '100%',
             width: '100%',
-            nodes: {
-                shape: 'ellipse'
-            },
+            nodes: nodesOptions,
             edges: {
                 arrows: {
                     to: {enabled: true, scaleFactor: 1, type: 'arrow'},
