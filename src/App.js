@@ -215,9 +215,9 @@ class App extends Component {
     }
 
     handleCreateEdge(data, callback) {
-        data.label = this.state.edgeWeight;
 
         if (this.state.graphType === "task") {
+            data.label = this.state.edgeWeight;
             data.id = this.state.edgeID;
 
             this.setState({
@@ -232,21 +232,28 @@ class App extends Component {
                 this.onCloseAddEdgeForm();
                 callback(data);
             });
-        } else {
+        }
+        else {
+            data.label = "1";
             data.id = this.state.sysEdgeID;
 
             this.setState({
-                sysEdges: [...this.state.sysEdges, {
-                    id: data.id,
-                    label: data.label,
-                    from: data.from,
-                    to: data.to
-                }],
-                sysEdgeID: this.state.sysEdgeID + 1
-            }, () => {
-                this.onCloseAddEdgeForm();
-                callback(data);
-            });
+                sysEdges: [...this.state.sysEdges,
+                    {
+                        id: data.id,
+                        label: data.label,
+                        from: data.from,
+                        to: data.to
+                    },
+                    {
+                        id: data.id + 1,
+                        label: data.label,
+                        from: data.to,
+                        to: data.from
+                    },
+                ],
+                sysEdgeID: this.state.sysEdgeID + 2
+            }, () => callback(data));
         }
     }
 
@@ -307,8 +314,22 @@ class App extends Component {
             const updatedEdges = this.state.edges.filter(edge => !edges.includes(edge.id));
             this.setState({edges: updatedEdges});
         } else {
-            const updatedSysEdges = this.state.sysEdges.filter(edge => !edges.includes(edge.id));
-            this.setState({sysEdges: updatedSysEdges});
+            //When deleting Node with outgoing/incoming edges
+            if (edges.length > 1) {
+                const newSysEdges = this.state.sysEdges.filter(edge => !edges.includes(edge.id));
+                this.setState({sysEdges: newSysEdges});
+
+            } else {
+                const selectedEdgeID = edges[0];
+                const selectedEdge = this.state.sysEdges.find(edge => edge.id === selectedEdgeID);
+                const edgePartner = this.state.sysEdges.find(edge => (
+                  edge.from === selectedEdge.to && edge.to === selectedEdge.from)
+                );
+                const newSysEdges = this.state.sysEdges.filter(edge =>
+                  edge.id !== selectedEdgeID && edge.id !== edgePartner.id
+                );
+                this.setState({sysEdges: newSysEdges});
+            }
         }
     }
 
@@ -538,6 +559,7 @@ class App extends Component {
                           handleDeleteNode={this.handleDeleteNode}
 
                           handleCreateEdge={this.handleCreateEdge}
+                          handleCreateSysEdge={this.handleCreateSysEdge}
                           handleUpdateEdge={this.handleUpdateEdge}
                           handleDeleteEdges={this.handleDeleteEdges}
 

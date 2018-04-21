@@ -48,6 +48,7 @@ export default class DrawSpace extends Component {
     drawGraph(nodes, edges) {
         const self = this;
         const {
+            graphType,
             renderMessage,
 
             renderEditNodeForm,
@@ -58,13 +59,14 @@ export default class DrawSpace extends Component {
             handleCreateEdge,
             renderEditEdgeForm,
             handleUpdateEdge,
-            handleDeleteEdges,
+            handleDeleteEdges
 
         } = self.props;
 
-        let nodesOptions = {};
+        let nodesOptions = {},
+            edgesOptions = {};
 
-        if (this.props.graphType === 'system') {
+        if (graphType === 'system') {
             nodesOptions = {
                 shape: "box",
                 shapeProperties: {
@@ -83,6 +85,12 @@ export default class DrawSpace extends Component {
                     }
                 }
             };
+            edgesOptions = {
+                font: {
+                    color: '#343434',
+                    size: 14
+                }
+            };
         } else {
             nodesOptions = {
                 shape: "ellipse",
@@ -99,15 +107,7 @@ export default class DrawSpace extends Component {
                     }
                 }
             };
-        }
-
-        const options = {
-            locale: 'en',
-            autoResize: false,
-            height: '100%',
-            width: '100%',
-            nodes: nodesOptions,
-            edges: {
+            edgesOptions = {
                 arrows: {
                     to: {enabled: true, scaleFactor: 1, type: 'arrow'},
                     from: {enabled: false, scaleFactor: 1, type: 'arrow'}
@@ -116,7 +116,16 @@ export default class DrawSpace extends Component {
                     color: '#343434',
                     size: 14
                 }
-            },
+            };
+        }
+
+        const options = {
+            locale: 'en',
+            autoResize: false,
+            height: '100%',
+            width: '100%',
+            nodes: nodesOptions,
+            edges: edgesOptions,
             manipulation: {
                 addNode: false,
 
@@ -142,22 +151,30 @@ export default class DrawSpace extends Component {
                         callback(null);
 
                     } else {
-                        renderAddEdgeForm(edgeData, () => {
-                            document.getElementById('add-edge').onclick = () => {
-                                handleCreateEdge(edgeData, callback);
-                            }
-                        });
+                        if (this.props.graphType === 'task') {
+                            renderAddEdgeForm(edgeData, () => {
+                                document.getElementById('add-edge').onclick = () => {
+                                    handleCreateEdge(edgeData, callback);
+                                }
+                            });
+                        } else {
+                            handleCreateEdge(edgeData, callback);
+                        }
                     }
                 },
 
                 //Editing Edge
                 editEdge: {
                     editWithoutDrag: (edgeData, callback) => {
-                        renderEditEdgeForm(edgeData, () =>
-                          document.getElementById('edit-edge-btn').onclick = () => {
-                              handleUpdateEdge(edgeData, callback);
-                          }
-                        );
+                        if (graphType === 'task') {
+                            renderEditEdgeForm(edgeData, () =>
+                              document.getElementById('edit-edge-btn').onclick = () => {
+                                  handleUpdateEdge(edgeData, callback);
+                              });
+                        } else {
+                            renderMessage("Can't edit edges in System Graph");
+                            callback(null);
+                        }
                     }
                 },
 
