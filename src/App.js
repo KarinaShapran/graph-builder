@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import DrawSpace from "./components/DrawSpace";
+import _ from 'underscore';
 
 import './index.css';
 
@@ -9,6 +10,9 @@ class App extends Component {
 
         this.state = {
             graphType: "",
+            adjMatrix: {},
+            nodesWithLinks: [],
+            links: [],
 
             nodes: [],
             edges: [],
@@ -73,6 +77,15 @@ class App extends Component {
 
         this.showTaskGraph = this.showTaskGraph.bind(this);
         this.showSystemGraph = this.showSystemGraph.bind(this);
+
+        this.isCoherent = this.isCoherent.bind(this);
+        this.isCycles = this.isCycles.bind(this);
+
+        this.getMatrixObj = this.getMatrixObj.bind(this);
+        this.getLinks = this.getLinks.bind(this);
+
+        this.detectCycles = this.detectCycles.bind(this);
+        this.isCyclic = this.isCyclic.bind(this);
     }
 
     componentDidMount() {
@@ -80,13 +93,12 @@ class App extends Component {
     }
 
     sortByID(arr) {
-        const sortedArr = arr.sort((a, b) => {
+        return arr.sort((a, b) => {
             const aId = a.id;
             const bId = b.id;
 
             return aId - bId
         });
-        return sortedArr
     }
 
     //SYSTEM MESSAGE
@@ -118,7 +130,10 @@ class App extends Component {
                     title: this.state.nodeID
                 }],
                 nodeID: this.state.nodeID + 1
-            }, () => this.resetInputs());
+            }, () => {
+                this.resetInputs();
+                this.getMatrixObj();
+            });
         } else {
             this.setState({
                 sysNodes: [...this.state.sysNodes, {
@@ -172,7 +187,10 @@ class App extends Component {
             const nodes = this.state.nodes.filter((n) => n.id !== node.id);
             const updatedNodes = this.sortByID([...nodes, updatedNode]);
 
-            this.setState({nodes: updatedNodes}, () => this.onCloseEditNodeForm());
+            this.setState({nodes: updatedNodes}, () => {
+                this.onCloseEditNodeForm();
+                this.getMatrixObj();
+            });
 
         } else {
             const sysNodes = this.state.sysNodes.filter((n) => n.id !== node.id);
@@ -188,7 +206,14 @@ class App extends Component {
 
         if (this.state.graphType === "task") {
             const updatedNodes = this.state.nodes.filter((node) => node.id !== nodeId);
-            this.setState({nodes: updatedNodes});
+            // let updatedNodes = [];
+            //   this.state.nodes.map((node) => {
+            //     if (node.id === nodeId) {
+            //         updatedNodes.push({});
+            //     } else updatedNodes.push(node);
+            // });
+            //this.setState({nodes: updatedNodes});
+            this.setState({nodes: updatedNodes}, () => this.getMatrixObj());
         } else {
             const updatedSysNodes = this.state.sysNodes.filter((node) => node.id !== nodeId);
             this.setState({sysNodes: updatedSysNodes});
@@ -230,6 +255,7 @@ class App extends Component {
                 edgeID: this.state.edgeID + 1
             }, () => {
                 this.onCloseAddEdgeForm();
+                this.getMatrixObj();
                 callback(data);
             });
         }
@@ -298,7 +324,10 @@ class App extends Component {
             const edges = this.state.edges.filter(e => e.id !== edge.id);
             const updatedEdges = this.sortByID([...edges, updatedEdge]);
 
-            this.setState({edges: updatedEdges}, () => this.onCloseEditEdgeForm());
+            this.setState({edges: updatedEdges}, () => {
+                this.onCloseEditEdgeForm();
+                this.getMatrixObj();
+            });
 
         } else {
             const sysEdges = this.state.sysEdges.filter(e => e.id !== edge.id);
@@ -340,6 +369,8 @@ class App extends Component {
             this.setState({
                 nodes,
                 nodeID: maxId + 1
+            }, () => {
+                this.getMatrixObj()
             });
         } else {
             this.setState({
@@ -372,6 +403,232 @@ class App extends Component {
 
     showSystemGraph() {
         this.setState({graphType: "system"});
+    }
+
+    isCoherent() {
+        const {sysNodes, sysEdges} = this.state;
+        let coherentNodes = [];
+
+        sysEdges.map(edge => sysNodes.map(node => {
+              if (!coherentNodes.includes(node.id) && (node.id === edge.from || node.id === edge.to)) {
+                  coherentNodes.push(node.id)
+              }
+          })
+        );
+
+        const incoherentNodes = sysNodes.filter(node => !coherentNodes.includes(node.id));
+
+        if (incoherentNodes.length > 0) {
+            let string = '';
+            for (let {id: i, label: l} of incoherentNodes) {
+                string += "id: " + i + ", weight: " + l + ";\n";
+            }
+            this.renderMessage("Graph is not coherent. \nNodes: \n" + string);
+        }
+    }
+
+    isCycles() {
+        const result = this.detectCycles(this.state.nodesWithLinks);
+
+        if (result === null) {
+            this.renderMessage('Graph got cycle somewhere');
+        } else {
+            console.log('topological sorting:');
+            console.log(result);
+        }
+    }
+
+    hasIncomingEdge(list, node) {
+        for (let i = 0, l = list.length; i < l; ++i) {
+            if (_.contains(list[i].links, node.id)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    detectCycles(nodes) {
+        // let newNodes = nodes.slice(0);
+        //const newNodes = [...nodes];
+        // const newNodes = [].concat(nodes);
+        const newNodes = [];
+
+        nodes.map(node => newNodes.push(node));
+
+        // Kahn Algorithm
+        let L = [],
+            S = _.filter(newNodes, node => {
+                return !this.hasIncomingEdge(newNodes, node);
+            }),
+            n = null;
+
+        while (S.length) {
+            // Remove a node n from S
+            n = S.pop();
+            // Add n to tail of L
+            L.push(n);
+
+            let i = n.links.length;
+            while (i--) {
+                // Getting the node associated to the current stored id in links
+                const m = _.findWhere(newNodes, {
+                    id: n.links[i]
+                });
+
+                // Remove edge e from the graph
+                n.links.pop();
+
+                if (!this.hasIncomingEdge(newNodes, m)) {
+                    S.push(m);
+                }
+            }
+        }
+
+        // If any of them still got links, there is cycle somewhere
+        const nodeWithEdge = _.find(newNodes, (node) => {
+            return node.links.length !== 0;
+        });
+        return (nodeWithEdge) ? null : L;
+    }
+
+    // getMatrixArr() {
+    //     //Array
+    //     const {nodes, edges} = this.state;
+    //     let matrix = [];
+    //
+    //     nodes.forEach(() => {
+    //         let innerArr = [];
+    //         nodes.forEach(() => innerArr.push(0));
+    //         matrix.push(innerArr);
+    //     });
+    //
+    //
+    //     for (let i = 0; i < matrix.length; i++) {
+    //         for (let j = 0; j < matrix.length; j++) {
+    //
+    //             console.log(i,j);
+    //             edges.map(edge => {
+    //                 if (edge.from === i && edge.to === j) {
+    //                     matrix[i][j] = parseInt(edge.label, 10);
+    //                 }
+    //               }
+    //             );
+    //         }
+    //     }
+    //
+    //     console.log(matrix);
+    // }
+    //
+    getMatrixObj() {
+        const {nodes, edges} = this.state;
+
+        if (nodes.length > 0) {
+            let matrix = {};
+
+            nodes.forEach(node => {
+                let innerObj = {};
+                nodes.forEach(node => innerObj[node.id] = 0);
+                matrix[node.id] = innerObj;
+            });
+
+            const keys = Object.keys(matrix);
+
+            for (let i = 0; i < keys.length; i++) {
+                for (let j = 0; j < keys.length; j++) {
+
+                    edges.map(edge => {
+                          if (edge.from === parseInt(keys[i], 10) && edge.to === parseInt(keys[j], 10)) {
+                              let keyI = keys[i];
+                              let keyJ = keys[j];
+                              let obj = matrix[`${keyI}`];
+                              obj[`${keyJ}`] = parseInt(edge.label, 10);
+                          }
+                      }
+                    );
+                }
+            }
+            this.setState({
+                adjMatrix: matrix
+            }, () => this.getLinks());
+        }
+    }
+
+    getLinks() {
+        const {adjMatrix} = this.state;
+        let nodesWithLinks = [];
+        let allLinks = [];
+
+        const keysArr = Object.keys(adjMatrix);
+        const valuesArr = keysArr.map(key => adjMatrix[key]);
+
+        valuesArr.forEach(linksObj => {
+            const keys = Object.keys(linksObj);
+            let links = [];
+
+            keys.forEach(key => {
+                if (linksObj[key] > 0) {
+                    links.push(key);
+                }
+            });
+
+            allLinks.push(links);
+        });
+
+        keysArr.map((key, index) => {
+            nodesWithLinks.push({
+                id: key,
+                links: allLinks[index]
+            });
+        });
+
+        this.setState({
+            nodesWithLinks: nodesWithLinks
+        });
+    }
+
+    DFSUtils(index, colors) {
+        const {adjMatrix} = this.state;
+
+        // Iterate through all adjacent vertices
+        const keysArr = Object.keys(adjMatrix);
+        const valuesArr = keysArr.map(key => adjMatrix[key]);
+    }
+
+    isCyclic() {
+        const {adjMatrix} = this.state;
+        const colors = [];
+        const keysArr = Object.keys(adjMatrix);
+
+        keysArr.forEach(key => {
+            const keyInt = parseInt(key, 10);
+            colors.push({
+                id: key,
+                color: "w"
+            });
+            //colors[`${keyInt}`] = "w";
+        });
+
+        console.log(colors);
+
+        colors.map((c, index) => {
+            console.log("Color", c, index);
+
+           if (c.color === "w") {
+               if (this.DFSUtils(c.id, colors) === true)
+                   return true;
+           } else {
+               return false;
+           }
+        })
+        // nodesWithLinks.map((index) => {
+        //     if (colors[index]) {
+        //         if (this.DFSUtils(index, colors) === true) {
+        //             return true;
+        //         }
+        //     } else {
+        //         return false;
+        //     }
+        // });
     }
 
     render() {
@@ -524,8 +781,17 @@ class App extends Component {
 
               {
                   (graphType === "task")
-                  ? <div className="content-container">
-                      <h1 className="title">{graphType} graph</h1>
+                    ? <div className="content-container">
+                        <div className="header-container">
+                            <h1 className="title">{graphType} graph</h1>
+                            <button
+                              className="btn red"
+                              id="btn-check"
+                              onClick={this.isCycles}
+                            >Check for cycles
+                            </button>
+                        </div>
+
                         <DrawSpace
                           graphType={graphType}
                           nodes={this.state.nodes}
@@ -548,8 +814,16 @@ class App extends Component {
                         />
                     </div>
 
-                  : <div className="content-container">
-                        <h1 className="title">{graphType} graph</h1>
+                    : <div className="content-container">
+                        <div className="header-container">
+                            <h1 className="title">{graphType} graph</h1>
+                            <button
+                              id="btn-check"
+                              className="btn red"
+                              onClick={this.isCoherent}
+                            >Check coherent
+                            </button>
+                        </div>
                         <DrawSpace
                           graphType={graphType}
                           nodes={this.state.sysNodes}

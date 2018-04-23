@@ -151,7 +151,7 @@ export default class DrawSpace extends Component {
                         callback(null);
 
                     } else {
-                        if (this.props.graphType === 'task') {
+                        if (graphType === 'task') {
                             renderAddEdgeForm(edgeData, () => {
                                 document.getElementById('add-edge').onclick = () => {
                                     handleCreateEdge(edgeData, callback);

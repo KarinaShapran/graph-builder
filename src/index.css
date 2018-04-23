@@ -111,6 +111,11 @@ input:active, input:focus {
   vertical-align: middle;
 }
 
+.btn.red {
+  background-color: rgba(233,73,112,1);
+  border: 2px solid rgba(233,73,112,1);
+}
+
 .btn.blue {
   background-color: #3ecadd;
   border: 2px solid #3ecadd;
@@ -154,14 +159,22 @@ input:active, input:focus {
   font-size: 16px;
   line-height: 1.5;
   margin-bottom: 10px;
+  white-space: pre-line;
 }
 
-#ok-btn, #import-btn, #export-btn, .area {
+#ok-btn,
+#import-btn,
+#export-btn,
+.area,
+#btn-check {
   border-radius: 8px;
   margin: 0 auto;
 }
 
-#ok-btn:hover, #import-btn:hover, #export-btn:hover {
+#ok-btn:hover,
+#import-btn:hover,
+#export-btn:hover,
+#btn-check:hover {
   -webkit-transform: translateY(-3px);
   transform: translateY(-3px);
   -webkit-box-shadow: 0 1px 4px 0 rgba(61, 66, 80, .18);
@@ -169,7 +182,8 @@ input:active, input:focus {
   position: relative;
 }
 
-#import-btn, #export-btn {
+#import-btn,
+#export-btn {
   width: 120px;
 }
 
@@ -189,7 +203,8 @@ input:active, input:focus {
   line-height: 1.5;
 }
 
-#import-area:active, #import-area:focus {
+#import-area:active,
+#import-area:focus {
   -webkit-box-shadow: inset 0 0 0 2px #784e8c, 0 0.0625rem 0.25rem 0 rgba(61, 66, 80, .18);
   box-shadow: inset 0 0 0 2px #784e8c, 0 0.0625rem 0.25rem 0 rgba(61, 66, 80, .18);
   outline: 0;
@@ -221,6 +236,18 @@ input:active, input:focus {
 }
 
 .title {
-  line-height: 1;
+  display: inline-block;
+  line-height: 46px;
   text-transform: capitalize;
+  margin: 0;
+}
+
+.header-container {
+  width: 800px;
+  margin: 20px 0;
+  min-height: 46px;
+}
+
+#btn-check {
+  float: right;
 }
