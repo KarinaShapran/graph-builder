@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "graph.js": "^1.21.1",
     "moment": "^2.22.0",
     "rc-time-picker": "^3.3.1",
     "react": "^16.2.0",

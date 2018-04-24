@@ -160,6 +160,7 @@ input:active, input:focus {
   line-height: 1.5;
   margin-bottom: 10px;
   white-space: pre-line;
+  width: 100%;
 }
 
 #ok-btn,
@@ -196,7 +197,7 @@ input:active, input:focus {
 }
 
 .area {
-  overflow: scroll;
+  overflow: auto;
   width: 260px;
   height: 300px;
   margin-top: 10px;

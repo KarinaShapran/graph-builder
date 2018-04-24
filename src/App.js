@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
 import DrawSpace from "./components/DrawSpace";
 import _ from 'underscore';
+import Graph from 'graph.js';
 
 import './index.css';
 
@@ -82,6 +83,8 @@ class App extends Component {
         this.isCycles = this.isCycles.bind(this);
 
         this.getMatrixObj = this.getMatrixObj.bind(this);
+        this.getMatrixArr = this.getMatrixArr.bind(this);
+
         this.getLinks = this.getLinks.bind(this);
 
         this.detectCycles = this.detectCycles.bind(this);
@@ -341,7 +344,7 @@ class App extends Component {
     handleDeleteEdges(edges) {
         if (this.state.graphType === "task") {
             const updatedEdges = this.state.edges.filter(edge => !edges.includes(edge.id));
-            this.setState({edges: updatedEdges});
+            this.setState({edges: updatedEdges}, () => this.getMatrixObj());
         } else {
             //When deleting Node with outgoing/incoming edges
             if (edges.length > 1) {
@@ -428,15 +431,44 @@ class App extends Component {
     }
 
     isCycles() {
-        const result = this.detectCycles(this.state.nodesWithLinks);
+        const {links} = this.state;
+        const arr = links.map(link => [link]);
 
-        if (result === null) {
-            this.renderMessage('Graph got cycle somewhere');
+        const graph = new Graph(...arr);
+        const cycles = graph.cycles();
+
+        let cyclesArr = [];
+        let string = "";
+
+        for (let cycle of cycles) {
+            cycle.map((e, index) => {
+                if(index !== cycle.length - 1) {
+                    string += e + " -> ";
+                } else {
+                    string += e;
+                }
+            });
+            string += "\n";
+            cyclesArr.push(cycle);
+        }
+
+        if (cyclesArr.length > 0) {
+            this.renderMessage('Graph got cycles:\n' + string);
         } else {
-            console.log('topological sorting:');
-            console.log(result);
+            this.renderMessage('Graph doesn\'t have cycles.');
         }
     }
+
+    // isCycles() {
+    //     const result = this.detectCycles(this.state.nodesWithLinks);
+    //
+    //     if (result === null) {
+    //         this.renderMessage('Graph got cycle somewhere');
+    //     } else {
+    //         console.log('topological sorting:');
+    //         console.log(result);
+    //     }
+    // }
 
     hasIncomingEdge(list, node) {
         for (let i = 0, l = list.length; i < l; ++i) {
@@ -491,36 +523,49 @@ class App extends Component {
         return (nodeWithEdge) ? null : L;
     }
 
-    // getMatrixArr() {
-    //     //Array
-    //     const {nodes, edges} = this.state;
-    //     let matrix = [];
-    //
-    //     nodes.forEach(() => {
-    //         let innerArr = [];
-    //         nodes.forEach(() => innerArr.push(0));
-    //         matrix.push(innerArr);
-    //     });
-    //
-    //
-    //     for (let i = 0; i < matrix.length; i++) {
-    //         for (let j = 0; j < matrix.length; j++) {
-    //
-    //             console.log(i,j);
-    //             edges.map(edge => {
-    //                 if (edge.from === i && edge.to === j) {
-    //                     matrix[i][j] = parseInt(edge.label, 10);
-    //                 }
-    //               }
-    //             );
-    //         }
-    //     }
-    //
-    //     console.log(matrix);
-    // }
-    //
+    getMatrixArr() {
+        const {nodes, edges} = this.state;
+
+        //Create links Array for Cycle checking
+        let linksArr = [];
+
+        edges.forEach((edge) => {
+           let innerLinksArr = [];
+           innerLinksArr.push(edge['from']);
+           innerLinksArr.push(edge['to']);
+           linksArr.push(innerLinksArr);
+        });
+
+        this.setState({
+            links: linksArr
+        });
+
+        //Adjacency matrix in Array structure
+        let matrix = [];
+
+        nodes.forEach(() => {
+            let innerArr = [];
+            nodes.forEach(() => innerArr.push(0));
+            matrix.push(innerArr);
+        });
+
+        for (let i = 0; i < matrix.length; i++) {
+            for (let j = 0; j < matrix.length; j++) {
+                edges.map(edge => {
+                    if (edge.from === i && edge.to === j) {
+                        matrix[i][j] = parseInt(edge.label, 10);
+                    }
+                  }
+                );
+            }
+        }
+    }
+
     getMatrixObj() {
         const {nodes, edges} = this.state;
+
+        //Update Array Matrix
+        this.getMatrixArr();
 
         if (nodes.length > 0) {
             let matrix = {};
@@ -608,10 +653,10 @@ class App extends Component {
             //colors[`${keyInt}`] = "w";
         });
 
-        console.log(colors);
+        //console.log(colors);
 
         colors.map((c, index) => {
-            console.log("Color", c, index);
+            //console.log("Color", c, index);
 
            if (c.color === "w") {
                if (this.DFSUtils(c.id, colors) === true)
