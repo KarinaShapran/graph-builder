@@ -44,7 +44,8 @@ class App extends Component {
             isActiveAddEdgeForm: false,
             isActiveEditEdgeForm: false,
 
-            message: ""
+            message: "",
+            testResults: ""
         };
 
         this.handleChangeNodeWeight = this.handleChangeNodeWeight.bind(this);
@@ -89,6 +90,9 @@ class App extends Component {
 
         this.detectCycles = this.detectCycles.bind(this);
         this.isCyclic = this.isCyclic.bind(this);
+
+
+        this.test_14 = this.test_14.bind(this);
     }
 
     componentDidMount() {
@@ -676,6 +680,29 @@ class App extends Component {
         // });
     }
 
+    sortByLabel(arr) {
+        return arr.sort((a, b) => {
+            const aLabel = a.label;
+            const bLabel = b.label;
+
+            return bLabel - aLabel
+        });
+    }
+
+    test_14() {
+        const {nodes} = this.state;
+        const sortedNodes = this.sortByLabel(nodes);
+        let result = "Test 14:\n";
+
+        sortedNodes.forEach(node => {
+            result += node.id + "(" + node.label + ")  ";
+        });
+
+        this.setState({
+            testResults: result
+        });
+    }
+
     render() {
         const {
             nodeID,
@@ -692,7 +719,9 @@ class App extends Component {
             isActiveEditEdgeForm,
 
             idEdgeEdit,
-            idSysEdgeEdit
+            idSysEdgeEdit,
+
+            testResults
         } = this.state;
 
         return (
@@ -830,6 +859,12 @@ class App extends Component {
                         <div className="header-container">
                             <h1 className="title">{graphType} graph</h1>
                             <button
+                              className="btn blue"
+                              id="btn-test"
+                              onClick={this.test_14}
+                            >Test 14
+                            </button>
+                            <button
                               className="btn red"
                               id="btn-check"
                               onClick={this.isCycles}
@@ -856,6 +891,8 @@ class App extends Component {
                           renderAddEdgeForm={this.renderAddEdgeForm}
                           renderEditEdgeForm={this.renderEditEdgeForm}
                           renderEditNodeForm={this.renderEditNodeForm}
+
+                          testResults={testResults}
                         />
                     </div>
 

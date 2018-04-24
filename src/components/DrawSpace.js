@@ -260,6 +260,7 @@ export default class DrawSpace extends Component {
 
     render() {
         const {exportValue, stringNodes, stringEdges} = this.state;
+        const {testResults} = this.props;
 
         return (
           <div className="workspace-wrapper">
@@ -267,6 +268,8 @@ export default class DrawSpace extends Component {
 
               <textarea className="area" value={stringNodes}/>
               <textarea className="area" value={stringEdges}/>
+
+              <textarea className="area" id="test" value={testResults}/>
 
               <div className="form-control export-form">
                   <button
