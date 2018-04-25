@@ -8,81 +8,106 @@ export default class DrawSpace extends Component {
         super();
 
         this.state = {
-            //Edge label
-            label: "",
-            //Edge ID
-            id: 0,
-            edges: [],
-            idEdit: null,
+            exportValue: "",
 
-            nodeForUpdate: {
-                id: "",
-                label: ""
-            },
-            edgeForUpdate: {
-                id: "",
-                from: "",
-                to: "",
-                label: ""
-            },
-
-            isActiveNodeUpdateForm: false,
-            isActiveAddEdgeForm: false,
-            isActiveMessageForm: false,
-            isActiveEditEdgeForm: false,
-            message: "",
-
-            exportValue: ""
+            stringNodes: "",
+            stringEdges: ""
         };
 
         this.drawGraph = this.drawGraph.bind(this);
-
-        this.renderMessage = this.renderMessage.bind(this);
-        this.renderEditNodeForm = this.renderEditNodeForm.bind(this);
-        this.renderAddEdgeForm = this.renderAddEdgeForm.bind(this);
-        this.renderEditEdgeForm = this.renderEditEdgeForm.bind(this);
-
-        this.onCloseEditNodeForm = this.onCloseEditNodeForm.bind(this);
-        this.onCloseAddEdgeForm = this.onCloseAddEdgeForm.bind(this);
-        this.onCloseEditEdgeForm = this.onCloseEditEdgeForm.bind(this);
-
-        this.handleCreateEdge = this.handleCreateEdge.bind(this);
-        this.handleClickOK = this.handleClickOK.bind(this);
         this.handleExportGraph = this.handleExportGraph.bind(this);
         this.handleImportGraph = this.handleImportGraph.bind(this);
-
-        this.updateEdge = this.updateEdge.bind(this);
-        this.deleteEdge = this.deleteEdge.bind(this);
-        this.deleteEdges = this.deleteEdges.bind(this);
 
         this.download = this.download.bind(this);
         this.handleChangeImportArea = this.handleChangeImportArea.bind(this);
         this.handleClearArea = this.handleClearArea.bind(this);
+
+        this.showNodes = this.showNodes.bind(this);
+        this.showEdges = this.showEdges.bind(this);
     }
 
     componentDidMount() {
-        this.drawGraph(this.props.nodes, this.state.edges);
+        this.drawGraph(this.props.nodes, this.props.edges);
+        this.showEdges(this.props.edges);
+        this.showNodes(this.props.nodes);
+        this.setState({exportValue: ""});
     }
 
     componentDidUpdate(prevProps) {
-        //TODO add for update edges
+        if (prevProps.nodes !== this.props.nodes || prevProps.edges !== this.props.edges) {
+            this.drawGraph(this.props.nodes, this.props.edges);
+        }
         if (prevProps.nodes !== this.props.nodes) {
-            this.drawGraph(this.props.nodes, this.state.edges);
+            this.showNodes(this.props.nodes);
+        }
+        if (prevProps.edges !== this.props.edges) {
+            this.showEdges(this.props.edges);
         }
     }
 
     drawGraph(nodes, edges) {
         const self = this;
+        const {
+            graphType,
+            renderMessage,
 
-        const options = {
-            locale: 'en',
-            autoResize: false,
-            height: '100%',
-            width: '100%',
-            nodes: {
-                shape: 'ellipse'
-            },
-            edges: {
+            renderEditNodeForm,
+            handleUpdateNode,
+            renderAddEdgeForm,
+            handleDeleteNode,
+
+            handleCreateEdge,
+            renderEditEdgeForm,
+            handleUpdateEdge,
+            handleDeleteEdges
+
+        } = self.props;
+
+        let nodesOptions = {},
+            edgesOptions = {};
+
+        if (graphType === 'system') {
+            nodesOptions = {
+                shape: "box",
+                shapeProperties: {
+                    borderRadius: 0
+                },
+                color: {
+                    border: '#784e8c',
+                    background: '#d7c6df',
+                    highlight: {
+                        border: '#402a4b',
+                        background: '#f6f2f8'
+                    },
+                    hover: {
+                        border: '#784e8c',
+                        background: '#d7c6df'
+                    }
+                }
+            };
+            edgesOptions = {
+                font: {
+                    color: '#343434',
+                    size: 14
+                }
+            };
+        } else {
+            nodesOptions = {
+                shape: "ellipse",
+                color: {
+                    border: '#3ecadd',
+                    background: '#c0eef4',
+                    highlight: {
+                        border: '#20a5b7',
+                        background: '#ebfafc'
+                    },
+                    hover: {
+                        border: '#3ecadd',
+                        background: '#c0eef4'
+                    }
+                }
+            };
+            edgesOptions = {
                 arrows: {
                     to: {enabled: true, scaleFactor: 1, type: 'arrow'},
                     from: {enabled: false, scaleFactor: 1, type: 'arrow'}
@@ -91,64 +116,80 @@ export default class DrawSpace extends Component {
                     color: '#343434',
                     size: 14
                 }
-            },
+            };
+        }
+
+        const options = {
+            locale: 'en',
+            autoResize: false,
+            height: '100%',
+            width: '100%',
+            nodes: nodesOptions,
+            edges: edgesOptions,
             manipulation: {
                 addNode: false,
 
                 // Editing Node
                 editNode: (data, callback) => {
-                    self.renderEditNodeForm(data, () =>
+                    renderEditNodeForm(data, () =>
                       document.getElementById('update-node-btn').onclick = () => {
-                          self.saveEditedNodeData(data, self.inputUpdate, callback);
-                          self.props.updateNode(data, self.onCloseEditNodeForm);
+                          handleUpdateNode(data, callback);
                       }
                     );
                 },
 
                 //Adding Edge
                 addEdge: (edgeData, callback) => {
-                    if (this.state.edges.find(edge => (
+                    if (this.props.edges.find(edge => (
                             (edge.from === edgeData.from && edge.to === edgeData.to) ||
                                 (edge.from === edgeData.to && edge.to === edgeData.from) ))){
-                        self.renderMessage("Can't connect selected nodes twice");
+                        renderMessage("Can't connect selected nodes twice");
                         callback(null);
-                    } else if (edgeData.from === edgeData.to) {
-                        self.renderMessage("Can't connect the node to itself");
-                        callback(null);
-                    } else {
-                        self.renderAddEdgeForm(edgeData, () => {
-                            document.getElementById('add-edge').onclick = () => {
-                                self.handleCreateEdge(edgeData, self.onCloseAddEdgeForm, callback);
-                            }
 
-                        });
+                    } else if (edgeData.from === edgeData.to) {
+                        renderMessage("Can't connect the node to itself");
+                        callback(null);
+
+                    } else {
+                        if (graphType === 'task') {
+                            renderAddEdgeForm(edgeData, () => {
+                                document.getElementById('add-edge').onclick = () => {
+                                    handleCreateEdge(edgeData, callback);
+                                }
+                            });
+                        } else {
+                            handleCreateEdge(edgeData, callback);
+                        }
                     }
                 },
 
                 //Editing Edge
                 editEdge: {
                     editWithoutDrag: (edgeData, callback) => {
-                        self.renderEditEdgeForm(edgeData, () =>
-                          document.getElementById('edit-edge-btn').onclick = () => {
-                              self.handleUpdateEdge(edgeData, callback);
-                              self.updateEdge(edgeData, self.onCloseEditEdgeForm);
-                          }
-                        );
+                        if (graphType === 'task') {
+                            renderEditEdgeForm(edgeData, () =>
+                              document.getElementById('edit-edge-btn').onclick = () => {
+                                  handleUpdateEdge(edgeData, callback);
+                              });
+                        } else {
+                            renderMessage("Can't edit edges in System Graph");
+                            callback(null);
+                        }
                     }
                 },
 
                 //Deleting Node
                 deleteNode: (data, callback) => {
                     if (data.edges.length !== 0) {
-                        self.deleteEdges(data.edges);
+                        handleDeleteEdges(data.edges);
                     }
-                    self.props.deleteNode(data.nodes);
+                    handleDeleteNode(data.nodes);
                     callback(data);
                 },
 
                 //Deleting Edge
                 deleteEdge: (data, callback) => {
-                    self.deleteEdge(data.edges);
+                    handleDeleteEdges(data.edges);
                     callback(data);
                 }
             },
@@ -157,155 +198,15 @@ export default class DrawSpace extends Component {
         const data = {nodes: nodes, edges: edges};
         const container = document.getElementById('mynetwork');
         const network = new vis.Network(container, data, options);
-        //this.props.updateNodes(network.body.data.nodes._data);
-    }
-
-    //ERROR MESSAGES
-    renderMessage(text) {
-        this.setState({
-            isActiveMessageForm: !this.state.isActiveMessageForm,
-            message: text
-        });
-    }
-
-    handleClickOK() {
-        this.setState({
-            message: "",
-            isActiveMessageForm: !this.state.isActiveMessageForm
-        });
-    }
-
-    //EDIT NODE METHODS
-    renderEditNodeForm(node, callback) {
-        this.setState({
-            isActiveNodeUpdateForm: !this.state.isActiveNodeUpdateForm,
-            nodeForUpdate: {
-                id: node.id,
-                label: node.label,
-                title: node.title
-            }
-        }, () => callback());
-    }
-
-    saveEditedNodeData(data, ref, callback) {
-        data.label = ref.value;
-        callback(data);
-    }
-
-    onCloseEditNodeForm() {
-        this.setState({
-            isActiveNodeUpdateForm: !this.state.isActiveNodeUpdateForm
-        });
-        this.inputUpdate.value = "";
-    }
-
-    //ADD EDGE METHODS
-    renderAddEdgeForm(edge, callback) {
-        this.setState({
-            isActiveAddEdgeForm: !this.state.isActiveAddEdgeForm
-        }, () => callback());
-    }
-
-    handleChangeEdgeWeight(e) {
-        this.setState({
-            label: e.target.value
-        });
-    }
-
-    handleCreateEdge(data, callback, defaultCallback) {
-        data.label = this.state.label;
-        data.id = this.state.id;
-
-        this.setState({
-            edges: [...this.state.edges, {
-                id: data.id,
-                label: this.state.label,
-                from: data.from,
-                to: data.to
-            }],
-            id: this.state.id + 1
-        }, () => {
-            callback();
-            defaultCallback(data);
-        });
-    }
-
-    onCloseAddEdgeForm() {
-        this.setState({
-            isActiveAddEdgeForm: !this.state.isActiveAddEdgeForm,
-            label: null
-        });
-        this.inputEdgeWeight.value = "";
-    }
-
-    //EDIT EDGE METHODS
-    renderEditEdgeForm(edgeData, callback) {
-        this.setState({
-            isActiveEditEdgeForm: !this.state.isActiveEditEdgeForm,
-            idEdit: edgeData.id
-        }, () => callback());
-    }
-
-    handleUpdateEdge(edgeData, callback) {
-        edgeData.label = this.state.label;
-        edgeData.from = edgeData.from.id;
-        edgeData.to = edgeData.to.id;
-
-        callback(edgeData);
-    }
-
-    updateEdge(edge, callback) {
-        const updatedEdge = {
-            id: edge.id,
-            label: edge.label,
-            from: edge.from,
-            to: edge.to
-        };
-
-        const edges = this.state.edges.filter(e => e.id !== edge.id);
-
-        const updatedEdges = [...edges, updatedEdge].sort((a, b) => {
-            const aId = a.id;
-            const bId = b.id;
-
-            return aId - bId
-        });
-
-        this.setState({
-            edges: updatedEdges
-        }, () => callback());
-    }
-
-    onCloseEditEdgeForm() {
-        this.inputEditEdgeWeight.value = "";
-
-        this.setState({
-            isActiveEditEdgeForm: !this.state.isActiveEditEdgeForm,
-            label: null
-        });
-    }
-
-    //DELETE EDGE METHODS
-    deleteEdge(edges) {
-        const edgeId = edges[0];
-        const updatedEdges = this.state.edges.filter((edge) => edge.id !== edgeId);
-
-        this.setState({edges: updatedEdges});
-    }
-
-    deleteEdges(edges) {
-        const updatedEdges = this.state.edges.filter(edge => !edges.includes(edge.id));
-
-        this.setState({edges: updatedEdges});
     }
 
     //EXPORT / IMPORT
     handleExportGraph() {
-        const exportArea = document.getElementById('import-area');
+        //const exportArea = document.getElementById('import-area');
 
         const data = [
           this.props.nodes,
-          this.state.edges
+          this.props.edges
         ];
 
         const exportValue = JSON.stringify(data, undefined, 2);
@@ -328,130 +229,48 @@ export default class DrawSpace extends Component {
     }
 
     handleImportGraph() {
-        const exportArea = document.getElementById('import-area');
-
-        const inputValue = exportArea.value;
+        const importArea = document.getElementById('import-area');
+        const inputValue = importArea.value;
 
         if (inputValue) {
             const inputData = JSON.parse(inputValue);
-
             const nodes = inputData[0],
-              edges = inputData[1];
+                  edges = inputData[1];
 
             this.props.setNodes(nodes);
-            this.setState({edges: edges});
+            this.props.setEdges(edges);
         } else {
-            this.renderMessage("Please, paste the data from the file into the area");
+            this.props.renderMessage("Please, paste the data from the file into the area");
         }
     }
-
 
     handleClearArea() {
         this.setState({exportValue: ""});
     }
 
+    showNodes(obj) {
+        const stringData = JSON.stringify(obj);
+        this.setState({stringNodes: stringData});
+    }
+
+    showEdges(obj) {
+        const stringData = JSON.stringify(obj);
+        this.setState({stringEdges: stringData});
+    }
+
     render() {
-        const {
-            idEdit,
-            message,
-            isActiveNodeUpdateForm,
-            isActiveAddEdgeForm,
-            isActiveMessageForm,
-            isActiveEditEdgeForm,
-            exportValue
-        } = this.state;
+        const {exportValue, stringNodes, stringEdges} = this.state;
+        const {testResults} = this.props;
 
         return (
           <div className="workspace-wrapper">
-              {
-                  isActiveMessageForm
-                    ? <div className="form-control message-popup">
-                        <span className="messages">{message}</span>
-                        <button
-                          id="ok-btn"
-                          className="btn purple"
-                          type="submit"
-                          onClick={this.handleClickOK}
-                        >
-                            OK
-                        </button>
-                    </div>
-                    : null
-              }
-
-              {
-                  isActiveNodeUpdateForm
-                    ? <div className="form-control update-form">
-                        <span className="form-title">Update Node {this.state.nodeForUpdate.id}</span>
-
-                        <div className="row">
-                            <input
-                              id="label"
-                              className="input purple"
-                              ref={ref => this.inputUpdate = ref}
-                              placeholder="Type weight"
-                            />
-                            <button
-                              id="update-node-btn"
-                              className="btn purple"
-                              type="submit"
-                            >
-                                Update Node
-                            </button>
-                        </div>
-                    </div>
-                    : null
-              }
-
-              {
-                  isActiveAddEdgeForm
-                    ? <div className="form-control add-edge-form">
-                        <label htmlFor="edge-weigth" className="form-title">Add Edge {this.state.id}</label>
-                        <div className="row">
-                            <input
-                              className="input"
-                              ref={ref => this.inputEdgeWeight = ref}
-                              id="edge-weight"
-                              placeholder="Type weight"
-                              onChange={(e) => this.handleChangeEdgeWeight(e)}
-                            />
-                            <button
-                              id="add-edge"
-                              className="btn"
-                              type="submit"
-                            >
-                                Create Edge
-                            </button>
-                        </div>
-                    </div>
-                    : null
-              }
-
-              {
-                  isActiveEditEdgeForm
-                    ? <div className="form-control edit-edge-form">
-                        <label htmlFor="edge-weigth" className="form-title">Edit Edge {idEdit}</label>
-                        <div className="row">
-                            <input
-                              className="input"
-                              ref={ref => this.inputEditEdgeWeight = ref}
-                              id="edge-weight"
-                              placeholder="Type weight"
-                              onChange={(e) => this.handleChangeEdgeWeight(e)}
-                            />
-                            <button
-                              id="edit-edge-btn"
-                              className="btn"
-                              type="submit"
-                            >
-                                Update Edge
-                            </button>
-                        </div>
-                    </div>
-                    : null
-              }
-
               <div id="mynetwork"></div>
+
+              <textarea className="area" value={stringNodes}/>
+              <textarea className="area" value={stringEdges}/>
+
+              <textarea className="area" id="test" value={testResults}/>
+
               <div className="form-control export-form">
                   <button
                     id="export-btn"
@@ -470,7 +289,7 @@ export default class DrawSpace extends Component {
                       Import
                   </button>
                   <span className="info">Paste the data from the exported file into the area below.</span>
-                  <textarea id="import-area" value={exportValue} onChange={this.handleChangeImportArea}/>
+                  <textarea id="import-area" className="area" value={exportValue} onChange={this.handleChangeImportArea}/>
                   <span className="clear" onClick={this.handleClearArea}>Clear Area</span>
               </div>
           </div>

@@ -22,7 +22,6 @@ body {
   height: 500px;
   border: 2px solid #e5e7f1;
   border-radius: .625rem;
-  margin: 20px;
   padding: 2px;
 }
 .form-title {
@@ -34,7 +33,7 @@ body {
   max-width: 300px;
   background-color: #fff;
   float: right;
-  margin: 0 20px;
+  /*margin: 0 20px;*/
   box-shadow: 0 0.375rem 1.25rem 0 rgba(61,66,80,.18);
   border-radius: .625rem;
   padding: 20px;
@@ -55,17 +54,15 @@ body {
   right: 20px;
 }
 
-/*.export-form {*/
-  /*position: absolute;*/
-  /*bottom: 20px;*/
-  /*right: 20px;*/
-/*}*/
+.export-form {
+  margin-bottom: 20px;
+}
 
 .row {
   width: 100%;
   margin-top: 10px;
 }
-.input, #import-area {
+.input, .area {
   color: #6f749a;
   font: 1rem/2.5rem Helvetica,Arial,sans-serif;
   width: 120px;
@@ -114,6 +111,16 @@ input:active, input:focus {
   vertical-align: middle;
 }
 
+.btn.red {
+  background-color: rgba(233,73,112,1);
+  border: 2px solid rgba(233,73,112,1);
+}
+
+.btn.blue {
+  background-color: #3ecadd;
+  border: 2px solid #3ecadd;
+}
+
 .btn.purple {
   background-color: #784e8c;
   border: 2px solid #88589f;
@@ -129,20 +136,48 @@ input:active, input:focus {
   border: 2px solid #aeec73;
 }
 
+.tabs-container {
+  padding: 10px 20px;
+}
+
+.tab-link {
+  color: #6f749a;
+  border: none;
+  background: transparent;
+  border-radius: initial;
+  transition: all .1s ease-in;
+}
+
+.tab-link.active {
+  border-bottom: 2px solid #88589f;
+  color: #88589f;
+}
+
 .messages {
   display: inline-block;
   color: red;
   font-size: 16px;
   line-height: 1.5;
   margin-bottom: 10px;
+  white-space: pre-line;
+  width: 100%;
 }
 
-#ok-btn, #import-btn, #export-btn, #import-area {
+#ok-btn,
+#import-btn,
+#export-btn,
+.area,
+#btn-check,
+#btn-test {
   border-radius: 8px;
   margin: 0 auto;
 }
 
-#ok-btn:hover, #import-btn:hover, #export-btn:hover {
+#ok-btn:hover,
+#import-btn:hover,
+#export-btn:hover,
+#btn-check:hover,
+#btn-test:hover {
   -webkit-transform: translateY(-3px);
   transform: translateY(-3px);
   -webkit-box-shadow: 0 1px 4px 0 rgba(61, 66, 80, .18);
@@ -150,7 +185,8 @@ input:active, input:focus {
   position: relative;
 }
 
-#import-btn, #export-btn {
+#import-btn,
+#export-btn {
   width: 120px;
 }
 
@@ -162,15 +198,17 @@ input:active, input:focus {
   margin-left: 10px;
 }
 
-#import-area {
-  overflow: scroll;
+.area {
+  overflow: auto;
   width: 260px;
   height: 300px;
   margin-top: 10px;
   line-height: 1.5;
+  margin-right: 10px;
 }
 
-#import-area:active, #import-area:focus {
+#import-area:active,
+#import-area:focus {
   -webkit-box-shadow: inset 0 0 0 2px #784e8c, 0 0.0625rem 0.25rem 0 rgba(61, 66, 80, .18);
   box-shadow: inset 0 0 0 2px #784e8c, 0 0.0625rem 0.25rem 0 rgba(61, 66, 80, .18);
   outline: 0;
@@ -195,4 +233,32 @@ input:active, input:focus {
 .clear:hover {
   cursor: pointer;
   color: #3ecadd;
+}
+
+.content-container {
+  padding: 0 20px;
+}
+
+.title {
+  display: inline-block;
+  line-height: 46px;
+  text-transform: capitalize;
+  margin: 0;
+}
+
+.header-container {
+  width: 800px;
+  margin: 20px 0;
+  min-height: 46px;
+}
+
+#test{
+  -webkit-box-shadow: inset 0 0 0 2px #3ecadd, 0 0.0625rem 0.25rem 0 rgba(61, 66, 80, .18);
+  box-shadow: inset 0 0 0 2px #3ecadd, 0 0.0625rem 0.25rem 0 rgba(61, 66, 80, .18);
+}
+
+#btn-check,
+#btn-test {
+  float: right;
+  margin: 0 10px;
 }
