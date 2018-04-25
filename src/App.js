@@ -3,6 +3,8 @@ import DrawSpace from "./components/DrawSpace";
 import _ from 'underscore';
 import Graph from 'graph.js';
 
+import toposort from 'toposort';
+
 import './index.css';
 
 class App extends Component {
@@ -93,6 +95,8 @@ class App extends Component {
 
 
         this.test_14 = this.test_14.bind(this);
+        this.test_9 = this.test_9.bind(this);
+        this.topologicalSort = this.topologicalSort.bind(this);
     }
 
     componentDidMount() {
@@ -463,16 +467,28 @@ class App extends Component {
         }
     }
 
-    // isCycles() {
-    //     const result = this.detectCycles(this.state.nodesWithLinks);
-    //
-    //     if (result === null) {
-    //         this.renderMessage('Graph got cycle somewhere');
-    //     } else {
-    //         console.log('topological sorting:');
-    //         console.log(result);
-    //     }
-    // }
+    topologicalSort() {
+        const {links} = this.state;
+        const arr = links.map(link => [link]);
+
+        // const graph = new Graph(...arr);
+        // const topVertices = graph.vertices_topologically();
+        //
+        // for (let vertice of topVertices) {
+        //     console.log(vertice);
+            // iterates over all vertices of the graph in topological order
+        // }
+
+        const result = this.detectCycles(this.state.nodesWithLinks);
+
+        if (result === null) {
+            this.renderMessage('Graph got cycle somewhere');
+        } else {
+            console.log('topological sorting:');
+            console.log(result);
+            this.getLinks();
+        }
+    }
 
     hasIncomingEdge(list, node) {
         for (let i = 0, l = list.length; i < l; ++i) {
@@ -703,6 +719,81 @@ class App extends Component {
         });
     }
 
+    sortByMaxLength(arr) {
+        return arr.sort((a, b) => {
+            const aLength = a.maxLength;
+            const bLength = b.maxLength;
+
+            return aLength - bLength
+        });
+    }
+
+    test_9() {
+
+        //Getting vertices that have no incoming edges (source vertices)
+        const {nodesWithLinks} = this.state;
+        const graph = new Graph();
+
+        nodesWithLinks.forEach(node => graph.addNewVertex(node.id));
+
+        nodesWithLinks.forEach(node => {
+            if (node.links.length > 0) {
+                node.links.forEach(link => graph.createNewEdge(node.id, link));
+            }
+        });
+
+        let sourceVertices = [];
+        for (let [key] of graph.sources()) {
+            sourceVertices.push(key);
+        }
+        //console.log(sourceVertices);
+
+        //Set new prop of Node, maxLength, to 1 for source nodes
+        const copyNodesWithLinks = [...nodesWithLinks];
+        copyNodesWithLinks.map(node => {
+            sourceVertices.forEach(vertice => {
+                if (node.id === vertice) {
+                    node.maxLength = 1;
+                }
+            });
+        });
+        copyNodesWithLinks.map(node => node.maxLength ? "" : node.maxLength = "");
+
+        //console.log(copyNodesWithLinks);
+
+        const sourceNodes = copyNodesWithLinks.filter(node => sourceVertices.includes(node.id));
+        const notSourceNodes = copyNodesWithLinks.filter(node => !sourceVertices.includes(node.id));
+        console.log(notSourceNodes);
+
+        sourceVertices.map(source => {
+            notSourceNodes.map(node => {
+                let paths = [];
+
+                for (let path of graph.paths(source, node.id)) {
+                    paths.push(path);
+
+                    if (path.length > node.maxLength){
+                        node.maxLength = path.length;
+                    }
+                    //console.log(path);
+                }
+            });
+        });
+        //console.log("After ", [...sourceNodes, ...notSourceNodes]);
+
+        const sortedNodes = this.sortByMaxLength([...sourceNodes, ...notSourceNodes]);
+
+        let result = "Test 9:\n";
+
+        sortedNodes.forEach(node => {
+            result += node.id + "(" + node.maxLength + ")  ";
+        });
+
+        this.setState({
+            testResults: result
+        });
+    }
+
     render() {
         const {
             nodeID,
@@ -858,6 +949,12 @@ class App extends Component {
                     ? <div className="content-container">
                         <div className="header-container">
                             <h1 className="title">{graphType} graph</h1>
+                            <button
+                              className="btn blue"
+                              id="btn-test"
+                              onClick={this.test_9}
+                            >Test 9
+                            </button>
                             <button
                               className="btn blue"
                               id="btn-test"
