@@ -17,6 +17,8 @@ class App extends Component {
             nodesWithLinks: [],
             links: [],
 
+            criticalPath: [],
+
             nodes: [],
             edges: [],
 
@@ -96,6 +98,8 @@ class App extends Component {
 
         this.test_14 = this.test_14.bind(this);
         this.test_9 = this.test_9.bind(this);
+        this.test_5 = this.test_5.bind(this);
+        this.commonFor5_9 = this.commonFor5_9.bind(this);
         this.topologicalSort = this.topologicalSort.bind(this);
     }
 
@@ -728,8 +732,7 @@ class App extends Component {
         });
     }
 
-    test_9() {
-
+    commonFor5_9() {
         //Getting vertices that have no incoming edges (source vertices)
         const {nodesWithLinks} = this.state;
         const graph = new Graph();
@@ -763,25 +766,42 @@ class App extends Component {
 
         const sourceNodes = copyNodesWithLinks.filter(node => sourceVertices.includes(node.id));
         const notSourceNodes = copyNodesWithLinks.filter(node => !sourceVertices.includes(node.id));
-        console.log(notSourceNodes);
+        //console.log(notSourceNodes);
 
+        let criticalPath = [];
         sourceVertices.map(source => {
+            // let criticalPath = [];
             notSourceNodes.map(node => {
                 let paths = [];
 
                 for (let path of graph.paths(source, node.id)) {
                     paths.push(path);
 
+                    if (path.length >= criticalPath.length) {
+                        criticalPath = path;
+                        console.log(path);
+                    }
+
                     if (path.length > node.maxLength){
                         node.maxLength = path.length;
                     }
-                    //console.log(path);
+
                 }
+
             });
+            //this.setState({criticalPath: criticalPath}, () => console.log(this.state.criticalPath.length));
         });
+        this.setState({criticalPath: criticalPath}, () => console.log(this.state.criticalPath.length));
+
         //console.log("After ", [...sourceNodes, ...notSourceNodes]);
 
         const sortedNodes = this.sortByMaxLength([...sourceNodes, ...notSourceNodes]);
+
+        return sortedNodes;
+    }
+
+    test_9() {
+        const sortedNodes = this.commonFor5_9();
 
         let result = "Test 9:\n";
 
@@ -789,9 +809,39 @@ class App extends Component {
             result += node.id + "(" + node.maxLength + ")  ";
         });
 
-        this.setState({
-            testResults: result
+        this.setState({testResults: result});
+    }
+
+    sortByLength(arr) {
+        return arr.sort((a, b) => {
+            const aLength = a.maxLength;
+            const bLength = b.maxLength;
+
+            return bLength - aLength
         });
+    }
+
+    test_5() {
+        const sortedNodes = this.commonFor5_9();
+
+        //console.log(sortedNodes);
+
+        const {criticalPath} = this.state;
+
+         // if (criticalPath.length > 0) {
+             let result = "Test 5:\n";
+
+             criticalPath.forEach(id => result += id  + " ");
+
+             const filteredNodes = sortedNodes.filter(node => !criticalPath.includes(node.id));
+             const sortedOtherNodes = this.sortByLength(filteredNodes);
+
+             sortedOtherNodes.forEach(node => result += node.id + " ");
+
+             console.log(criticalPath, sortedOtherNodes);
+
+             this.setState({testResults: result});
+         // }
     }
 
     render() {
@@ -949,6 +999,12 @@ class App extends Component {
                     ? <div className="content-container">
                         <div className="header-container">
                             <h1 className="title">{graphType} graph</h1>
+                            <button
+                              className="btn blue"
+                              id="btn-test"
+                              onClick={this.test_5}
+                            >Test 5
+                            </button>
                             <button
                               className="btn blue"
                               id="btn-test"
