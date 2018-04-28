@@ -1,9 +1,6 @@
 import React, {Component} from 'react';
 import DrawSpace from "./components/DrawSpace";
-import _ from 'underscore';
 import Graph from 'graph.js';
-
-import toposort from 'toposort';
 
 import './index.css';
 
@@ -92,15 +89,10 @@ class App extends Component {
 
         this.getLinks = this.getLinks.bind(this);
 
-        this.detectCycles = this.detectCycles.bind(this);
-        this.isCyclic = this.isCyclic.bind(this);
-
-
         this.test_14 = this.test_14.bind(this);
         this.test_9 = this.test_9.bind(this);
         this.test_5 = this.test_5.bind(this);
         this.commonFor5_9 = this.commonFor5_9.bind(this);
-        this.topologicalSort = this.topologicalSort.bind(this);
     }
 
     componentDidMount() {
@@ -422,23 +414,35 @@ class App extends Component {
 
     isCoherent() {
         const {sysNodes, sysEdges} = this.state;
-        let coherentNodes = [];
+        const graph = new Graph();
+        let paths = [];
+        let checkedPaths = [];
 
-        sysEdges.map(edge => sysNodes.map(node => {
-              if (!coherentNodes.includes(node.id) && (node.id === edge.from || node.id === edge.to)) {
-                  coherentNodes.push(node.id)
-              }
-          })
-        );
+        sysNodes.forEach(node => graph.addNewVertex(node.id));
+        sysEdges.forEach(edge => graph.createNewEdge(edge.from, edge.to));
 
-        const incoherentNodes = sysNodes.filter(node => !coherentNodes.includes(node.id));
+        sysNodes.forEach(nodeOut => {
+            sysNodes.forEach(nodeIn => {
+                for (let path of graph.paths(nodeOut.id, nodeIn.id)) {
+                    paths.push(path);
+                }
+            });
+        });
 
-        if (incoherentNodes.length > 0) {
-            let string = '';
-            for (let {id: i, label: l} of incoherentNodes) {
-                string += "id: " + i + ", weight: " + l + ";\n";
-            }
-            this.renderMessage("Graph is not coherent. \nNodes: \n" + string);
+        sysNodes.forEach(nodeOut => {
+            sysNodes.forEach(nodeIn => {
+                checkedPaths.push(
+                  paths.find(path => path[0] === nodeOut.id && path[path.length - 1] === nodeIn.id)
+                );
+            });
+        });
+
+        const undefinedPaths = checkedPaths.filter(path => path === undefined);
+
+        if (undefinedPaths.length > 0) {
+            this.renderMessage("Graph is not coherent.");
+          } else {
+            this.renderMessage("Graph is coherent.");
         }
     }
 
@@ -469,82 +473,6 @@ class App extends Component {
         } else {
             this.renderMessage('Graph doesn\'t have cycles.');
         }
-    }
-
-    topologicalSort() {
-        const {links} = this.state;
-        const arr = links.map(link => [link]);
-
-        // const graph = new Graph(...arr);
-        // const topVertices = graph.vertices_topologically();
-        //
-        // for (let vertice of topVertices) {
-        //     console.log(vertice);
-            // iterates over all vertices of the graph in topological order
-        // }
-
-        const result = this.detectCycles(this.state.nodesWithLinks);
-
-        if (result === null) {
-            this.renderMessage('Graph got cycle somewhere');
-        } else {
-            console.log('topological sorting:');
-            console.log(result);
-            this.getLinks();
-        }
-    }
-
-    hasIncomingEdge(list, node) {
-        for (let i = 0, l = list.length; i < l; ++i) {
-            if (_.contains(list[i].links, node.id)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    detectCycles(nodes) {
-        // let newNodes = nodes.slice(0);
-        //const newNodes = [...nodes];
-        // const newNodes = [].concat(nodes);
-        const newNodes = [];
-
-        nodes.map(node => newNodes.push(node));
-
-        // Kahn Algorithm
-        let L = [],
-            S = _.filter(newNodes, node => {
-                return !this.hasIncomingEdge(newNodes, node);
-            }),
-            n = null;
-
-        while (S.length) {
-            // Remove a node n from S
-            n = S.pop();
-            // Add n to tail of L
-            L.push(n);
-
-            let i = n.links.length;
-            while (i--) {
-                // Getting the node associated to the current stored id in links
-                const m = _.findWhere(newNodes, {
-                    id: n.links[i]
-                });
-
-                // Remove edge e from the graph
-                n.links.pop();
-
-                if (!this.hasIncomingEdge(newNodes, m)) {
-                    S.push(m);
-                }
-            }
-        }
-
-        // If any of them still got links, there is cycle somewhere
-        const nodeWithEdge = _.find(newNodes, (node) => {
-            return node.links.length !== 0;
-        });
-        return (nodeWithEdge) ? null : L;
     }
 
     getMatrixArr() {
@@ -650,54 +578,7 @@ class App extends Component {
             });
         });
 
-        this.setState({
-            nodesWithLinks: nodesWithLinks
-        });
-    }
-
-    DFSUtils(index, colors) {
-        const {adjMatrix} = this.state;
-
-        // Iterate through all adjacent vertices
-        const keysArr = Object.keys(adjMatrix);
-        const valuesArr = keysArr.map(key => adjMatrix[key]);
-    }
-
-    isCyclic() {
-        const {adjMatrix} = this.state;
-        const colors = [];
-        const keysArr = Object.keys(adjMatrix);
-
-        keysArr.forEach(key => {
-            const keyInt = parseInt(key, 10);
-            colors.push({
-                id: key,
-                color: "w"
-            });
-            //colors[`${keyInt}`] = "w";
-        });
-
-        //console.log(colors);
-
-        colors.map((c, index) => {
-            //console.log("Color", c, index);
-
-           if (c.color === "w") {
-               if (this.DFSUtils(c.id, colors) === true)
-                   return true;
-           } else {
-               return false;
-           }
-        })
-        // nodesWithLinks.map((index) => {
-        //     if (colors[index]) {
-        //         if (this.DFSUtils(index, colors) === true) {
-        //             return true;
-        //         }
-        //     } else {
-        //         return false;
-        //     }
-        // });
+        this.setState({nodesWithLinks: nodesWithLinks});
     }
 
     sortByLabel(arr) {
