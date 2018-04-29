@@ -93,6 +93,7 @@ class App extends Component {
         this.test_9 = this.test_9.bind(this);
         this.test_5 = this.test_5.bind(this);
         this.commonFor5_9 = this.commonFor5_9.bind(this);
+        this.calculate_5 = this.calculate_5.bind(this);
     }
 
     componentDidMount() {
@@ -651,7 +652,6 @@ class App extends Component {
 
         let criticalPath = [];
         sourceVertices.map(source => {
-            // let criticalPath = [];
             notSourceNodes.map(node => {
                 let paths = [];
 
@@ -666,11 +666,8 @@ class App extends Component {
                     if (path.length > node.maxLength){
                         node.maxLength = path.length;
                     }
-
                 }
-
             });
-            //this.setState({criticalPath: criticalPath}, () => console.log(this.state.criticalPath.length));
         });
         this.setState({criticalPath: criticalPath}, () => console.log(this.state.criticalPath.length));
 
@@ -702,27 +699,76 @@ class App extends Component {
         });
     }
 
+    calculate_5() {
+        //Getting vertices that have no outgoing edges (sink vertices)
+        const {nodesWithLinks} = this.state;
+        const graph = new Graph();
+
+        nodesWithLinks.forEach(node => graph.addNewVertex(node.id));
+
+        nodesWithLinks.forEach(node => {
+            if (node.links.length > 0) {
+                node.links.forEach(link => graph.createNewEdge(node.id, link));
+            }
+        });
+
+        let sinkVertices = [];
+        for (let [key] of graph.sinks()) {
+            sinkVertices.push(key);
+        }
+
+        //Set new prop of Node, maxLength, to 1 for sink nodes
+        const copyNodesWithLinks = [...nodesWithLinks];
+        copyNodesWithLinks.map(node => {
+            sinkVertices.forEach(vertice => {
+                if (node.id === vertice) {
+                    node.maxLength = 1;
+                }
+            });
+        });
+        copyNodesWithLinks.map(node => node.maxLength ? "" : node.maxLength = "");
+
+        const sinkNodes = copyNodesWithLinks.filter(node => sinkVertices.includes(node.id));
+        const sourceVertices = copyNodesWithLinks.filter(node => !sinkVertices.includes(node.id));
+
+        let criticalPath = [];
+        sourceVertices.map(source => {
+            sinkVertices.map(sink => {
+                let paths = [];
+
+                for (let path of graph.paths(source.id, sink)) {
+                    paths.push(path);
+
+                    if (path.length >= criticalPath.length) {
+                        criticalPath = path;
+                    }
+
+                    if (path.length > source.maxLength){
+                        source.maxLength = path.length;
+                    }
+                }
+            });
+        });
+        this.setState({criticalPath: criticalPath});
+
+        return {sortedNodes: this.sortByMaxLength([...sinkNodes, ...sourceVertices]), criticalPath};
+    }
+
     test_5() {
-        const sortedNodes = this.commonFor5_9();
+        const {sortedNodes, criticalPath} = this.calculate_5();
 
-        //console.log(sortedNodes);
+        let result = "Test 5:\n";
 
-        const {criticalPath} = this.state;
+        criticalPath.forEach(id => result += id + " ");
 
-         // if (criticalPath.length > 0) {
-             let result = "Test 5:\n";
+        const filteredNodes = sortedNodes.filter(node => !criticalPath.includes(node.id));
+        const sortedOtherNodes = this.sortByLength(filteredNodes);
 
-             criticalPath.forEach(id => result += id  + " ");
+        sortedOtherNodes.forEach(node => result += node.id + " ");
 
-             const filteredNodes = sortedNodes.filter(node => !criticalPath.includes(node.id));
-             const sortedOtherNodes = this.sortByLength(filteredNodes);
+        console.log(criticalPath, sortedOtherNodes);
 
-             sortedOtherNodes.forEach(node => result += node.id + " ");
-
-             console.log(criticalPath, sortedOtherNodes);
-
-             this.setState({testResults: result});
-         // }
+        this.setState({testResults: result});
     }
 
     render() {
