@@ -1,6 +1,12 @@
 import React, {Component} from 'react';
 import DrawSpace from "./components/DrawSpace";
 import Graph from 'graph.js';
+import {
+    sortByID,
+    sortByLabel,
+    sortByMaxLength,
+    sortByLength
+} from "./sort";
 
 import './index.css';
 
@@ -90,23 +96,16 @@ class App extends Component {
         this.getLinks = this.getLinks.bind(this);
 
         this.test_14 = this.test_14.bind(this);
+
+        this.calculate_9 = this.calculate_9.bind(this);
         this.test_9 = this.test_9.bind(this);
-        this.test_5 = this.test_5.bind(this);
-        this.commonFor5_9 = this.commonFor5_9.bind(this);
+
         this.calculate_5 = this.calculate_5.bind(this);
+        this.test_5 = this.test_5.bind(this);
     }
 
     componentDidMount() {
         this.setState({graphType: "task"});
-    }
-
-    sortByID(arr) {
-        return arr.sort((a, b) => {
-            const aId = a.id;
-            const bId = b.id;
-
-            return aId - bId
-        });
     }
 
     //SYSTEM MESSAGE
@@ -193,7 +192,7 @@ class App extends Component {
 
         if (this.state.graphType === "task") {
             const nodes = this.state.nodes.filter((n) => n.id !== node.id);
-            const updatedNodes = this.sortByID([...nodes, updatedNode]);
+            const updatedNodes = sortByID([...nodes, updatedNode]);
 
             this.setState({nodes: updatedNodes}, () => {
                 this.onCloseEditNodeForm();
@@ -202,7 +201,7 @@ class App extends Component {
 
         } else {
             const sysNodes = this.state.sysNodes.filter((n) => n.id !== node.id);
-            const updatedSysNodes = this.sortByID([...sysNodes, updatedNode]);
+            const updatedSysNodes = sortByID([...sysNodes, updatedNode]);
 
             this.setState({sysNodes: updatedSysNodes}, () => this.onCloseEditNodeForm());
         }
@@ -330,7 +329,7 @@ class App extends Component {
 
         if (this.state.graphType === "task") {
             const edges = this.state.edges.filter(e => e.id !== edge.id);
-            const updatedEdges = this.sortByID([...edges, updatedEdge]);
+            const updatedEdges = sortByID([...edges, updatedEdge]);
 
             this.setState({edges: updatedEdges}, () => {
                 this.onCloseEditEdgeForm();
@@ -339,7 +338,7 @@ class App extends Component {
 
         } else {
             const sysEdges = this.state.sysEdges.filter(e => e.id !== edge.id);
-            const updatedSysEdges = this.sortByID([...sysEdges, updatedEdge]);
+            const updatedSysEdges = sortByID([...sysEdges, updatedEdge]);
 
             this.setState({sysEdges: updatedSysEdges}, () => this.onCloseEditEdgeForm());
         }
@@ -582,18 +581,9 @@ class App extends Component {
         this.setState({nodesWithLinks: nodesWithLinks});
     }
 
-    sortByLabel(arr) {
-        return arr.sort((a, b) => {
-            const aLabel = a.label;
-            const bLabel = b.label;
-
-            return bLabel - aLabel
-        });
-    }
-
     test_14() {
         const {nodes} = this.state;
-        const sortedNodes = this.sortByLabel(nodes);
+        const sortedNodes = sortByLabel(nodes);
         let result = "Test 14:\n";
 
         sortedNodes.forEach(node => {
@@ -605,16 +595,7 @@ class App extends Component {
         });
     }
 
-    sortByMaxLength(arr) {
-        return arr.sort((a, b) => {
-            const aLength = a.maxLength;
-            const bLength = b.maxLength;
-
-            return aLength - bLength
-        });
-    }
-
-    commonFor5_9() {
+    calculate_9() {
         //Getting vertices that have no incoming edges (source vertices)
         const {nodesWithLinks} = this.state;
         const graph = new Graph();
@@ -631,7 +612,6 @@ class App extends Component {
         for (let [key] of graph.sources()) {
             sourceVertices.push(key);
         }
-        //console.log(sourceVertices);
 
         //Set new prop of Node, maxLength, to 1 for source nodes
         const copyNodesWithLinks = [...nodesWithLinks];
@@ -644,13 +624,9 @@ class App extends Component {
         });
         copyNodesWithLinks.map(node => node.maxLength ? "" : node.maxLength = "");
 
-        //console.log(copyNodesWithLinks);
-
         const sourceNodes = copyNodesWithLinks.filter(node => sourceVertices.includes(node.id));
         const notSourceNodes = copyNodesWithLinks.filter(node => !sourceVertices.includes(node.id));
-        //console.log(notSourceNodes);
 
-        let criticalPath = [];
         sourceVertices.map(source => {
             notSourceNodes.map(node => {
                 let paths = [];
@@ -658,28 +634,18 @@ class App extends Component {
                 for (let path of graph.paths(source, node.id)) {
                     paths.push(path);
 
-                    if (path.length >= criticalPath.length) {
-                        criticalPath = path;
-                        console.log(path);
-                    }
-
                     if (path.length > node.maxLength){
                         node.maxLength = path.length;
                     }
                 }
             });
         });
-        this.setState({criticalPath: criticalPath}, () => console.log(this.state.criticalPath.length));
 
-        //console.log("After ", [...sourceNodes, ...notSourceNodes]);
-
-        const sortedNodes = this.sortByMaxLength([...sourceNodes, ...notSourceNodes]);
-
-        return sortedNodes;
+        return sortByMaxLength([...sourceNodes, ...notSourceNodes]);
     }
 
     test_9() {
-        const sortedNodes = this.commonFor5_9();
+        const sortedNodes = this.calculate_9();
 
         let result = "Test 9:\n";
 
@@ -688,15 +654,6 @@ class App extends Component {
         });
 
         this.setState({testResults: result});
-    }
-
-    sortByLength(arr) {
-        return arr.sort((a, b) => {
-            const aLength = a.maxLength;
-            const bLength = b.maxLength;
-
-            return bLength - aLength
-        });
     }
 
     calculate_5() {
@@ -751,7 +708,7 @@ class App extends Component {
         });
         this.setState({criticalPath: criticalPath});
 
-        return {sortedNodes: this.sortByMaxLength([...sinkNodes, ...sourceVertices]), criticalPath};
+        return {sortedNodes: sortByMaxLength([...sinkNodes, ...sourceVertices]), criticalPath};
     }
 
     test_5() {
@@ -762,7 +719,7 @@ class App extends Component {
         criticalPath.forEach(id => result += id + " ");
 
         const filteredNodes = sortedNodes.filter(node => !criticalPath.includes(node.id));
-        const sortedOtherNodes = this.sortByLength(filteredNodes);
+        const sortedOtherNodes = sortByLength(filteredNodes);
 
         sortedOtherNodes.forEach(node => result += node.id + " ");
 
