@@ -1,5 +1,7 @@
 import React, {Component} from 'react';
 import DrawSpace from "./components/DrawSpace";
+import GenerationForm from "./components/GenerationForm";
+
 import Graph from 'graph.js';
 import {
     sortByID,
@@ -615,7 +617,7 @@ class App extends Component {
 
         //Set new prop of Node, maxLength, to 1 for source nodes
         const copyNodesWithLinks = [...nodesWithLinks];
-        copyNodesWithLinks.map(node => {
+        copyNodesWithLinks.forEach(node => {
             sourceVertices.forEach(vertice => {
                 if (node.id === vertice) {
                     node.maxLength = 1;
@@ -627,8 +629,8 @@ class App extends Component {
         const sourceNodes = copyNodesWithLinks.filter(node => sourceVertices.includes(node.id));
         const notSourceNodes = copyNodesWithLinks.filter(node => !sourceVertices.includes(node.id));
 
-        sourceVertices.map(source => {
-            notSourceNodes.map(node => {
+        sourceVertices.forEach(source => {
+            notSourceNodes.forEach(node => {
                 let paths = [];
 
                 for (let path of graph.paths(source, node.id)) {
@@ -676,7 +678,7 @@ class App extends Component {
 
         //Set new prop of Node, maxLength, to 1 for sink nodes
         const copyNodesWithLinks = [...nodesWithLinks];
-        copyNodesWithLinks.map(node => {
+        copyNodesWithLinks.forEach(node => {
             sinkVertices.forEach(vertice => {
                 if (node.id === vertice) {
                     node.maxLength = 1;
@@ -689,8 +691,8 @@ class App extends Component {
         const sourceVertices = copyNodesWithLinks.filter(node => !sinkVertices.includes(node.id));
 
         let criticalPath = [];
-        sourceVertices.map(source => {
-            sinkVertices.map(sink => {
+        sourceVertices.forEach(source => {
+            sinkVertices.forEach(sink => {
                 let paths = [];
 
                 for (let path of graph.paths(source.id, sink)) {
@@ -908,6 +910,8 @@ class App extends Component {
                             >Check for cycles
                             </button>
                         </div>
+
+                      <GenerationForm></GenerationForm>
 
                         <DrawSpace
                           graphType={graphType}

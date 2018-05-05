@@ -27,21 +27,25 @@ export default class DrawSpace extends Component {
     }
 
     componentDidMount() {
-        this.drawGraph(this.props.nodes, this.props.edges);
-        this.showEdges(this.props.edges);
-        this.showNodes(this.props.nodes);
+        const {nodes, edges} = this.props;
+
+        this.drawGraph(nodes, edges);
+        this.showEdges(edges);
+        this.showNodes(nodes);
         this.setState({exportValue: ""});
     }
 
     componentDidUpdate(prevProps) {
-        if (prevProps.nodes !== this.props.nodes || prevProps.edges !== this.props.edges) {
-            this.drawGraph(this.props.nodes, this.props.edges);
+        const {nodes, edges} = this.props;
+
+        if (prevProps.nodes !== nodes || prevProps.edges !== edges) {
+            this.drawGraph(nodes, edges);
         }
-        if (prevProps.nodes !== this.props.nodes) {
-            this.showNodes(this.props.nodes);
+        if (prevProps.nodes !== nodes) {
+            this.showNodes(nodes);
         }
-        if (prevProps.edges !== this.props.edges) {
-            this.showEdges(this.props.edges);
+        if (prevProps.edges !== edges) {
+            this.showEdges(edges);
         }
     }
 
@@ -62,6 +66,10 @@ export default class DrawSpace extends Component {
             handleDeleteEdges
 
         } = self.props;
+
+        const updatedNodes = nodes.map(node => {
+            return {...node, label: node.id.toString() + "/" + node.label}
+        });
 
         let nodesOptions = {},
             edgesOptions = {};
@@ -93,7 +101,7 @@ export default class DrawSpace extends Component {
             };
         } else {
             nodesOptions = {
-                shape: "ellipse",
+                shape: "circle",
                 color: {
                     border: '#3ecadd',
                     background: '#c0eef4',
@@ -140,7 +148,7 @@ export default class DrawSpace extends Component {
 
                 //Adding Edge
                 addEdge: (edgeData, callback) => {
-                    if (this.props.edges.find(edge => (
+                    if (self.props.edges.find(edge => (
                             (edge.from === edgeData.from && edge.to === edgeData.to) ||
                                 (edge.from === edgeData.to && edge.to === edgeData.from) ))){
                         renderMessage("Can't connect selected nodes twice");
@@ -195,7 +203,7 @@ export default class DrawSpace extends Component {
             },
         };
 
-        const data = {nodes: nodes, edges: edges};
+        const data = {nodes: updatedNodes, edges: edges};
         const container = document.getElementById('mynetwork');
         const network = new vis.Network(container, data, options);
     }
@@ -229,6 +237,7 @@ export default class DrawSpace extends Component {
     }
 
     handleImportGraph() {
+        const {setNodes, setEdges, renderMessage} = this.props;
         const importArea = document.getElementById('import-area');
         const inputValue = importArea.value;
 
@@ -237,10 +246,10 @@ export default class DrawSpace extends Component {
             const nodes = inputData[0],
                   edges = inputData[1];
 
-            this.props.setNodes(nodes);
-            this.props.setEdges(edges);
+            setNodes(nodes);
+            setEdges(edges);
         } else {
-            this.props.renderMessage("Please, paste the data from the file into the area");
+            renderMessage("Please, paste the data from the file into the area");
         }
     }
 
@@ -259,17 +268,16 @@ export default class DrawSpace extends Component {
     }
 
     render() {
-        const {exportValue, stringNodes, stringEdges} = this.state;
         const {testResults} = this.props;
+        const {exportValue, stringNodes, stringEdges} = this.state;
 
         return (
           <div className="workspace-wrapper">
               <div id="mynetwork"></div>
 
-              <textarea className="area" value={stringNodes}/>
-              <textarea className="area" value={stringEdges}/>
-
-              <textarea className="area" id="test" value={testResults}/>
+              <textarea className="area" value={stringNodes} disabled/>
+              <textarea className="area" value={stringEdges} disabled/>
+              <textarea className="area" id="test" value={testResults} disabled/>
 
               <div className="form-control export-form">
                   <button
