@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-
+import Graph from 'graph.js';
 
 export default class GenerationForm extends Component {
 
@@ -16,6 +16,10 @@ export default class GenerationForm extends Component {
             connectivity: "",
             minEdgeWeight: "",
             maxEdgeWeight: "",
+
+            nodesWeightSum: null,
+            edgesWeightSum: null,
+
             message: ""
         };
         this.handleChangeNodesNumber = this.handleChangeNodesNumber.bind(this);
@@ -28,6 +32,11 @@ export default class GenerationForm extends Component {
         this.validateMinMax = this.validateMinMax.bind(this);
         this.generateGraph = this.generateGraph.bind(this);
         this.generateNodes = this.generateNodes.bind(this);
+        this.getNeededEdgesWeightSum = this.getNeededEdgesWeightSum.bind(this);
+
+        this.resetSums = this.resetSums.bind(this);
+        this.generateEdges = this.generateEdges.bind(this);
+        this.isCycles = this.isCycles.bind(this);
     }
 
     handleChangeNodesNumber(e) {
@@ -72,11 +81,9 @@ export default class GenerationForm extends Component {
         });
     }
 
-    validateMinMax() {
-        const {minNodeWeight, maxNodeWeight} = this.state;
-
-        if (parseInt(minNodeWeight, 10) > parseInt(maxNodeWeight, 10)) {
-            this.setState({message: "MIN node weight need to be less than MAX node weight"});
+    validateMinMax(min, max) {
+        if (parseInt(min, 10) > parseInt(max, 10)) {
+            this.setState({message: "MIN weight need to be less than MAX weight"});
             return false;
         } else {
             return true;
@@ -89,32 +96,161 @@ export default class GenerationForm extends Component {
         return Math.floor(Math.random() * (max - min + 1)) + min; //The maximum is inclusive and the minimum is inclusive
     }
 
-    generateNodes() {
-        if (this.validateMinMax()) {
-            const {nodesNumber, minNodeWeight, maxNodeWeight} = this.state;
+    generateNodes(callback) {
+        const {nodesNumber, minNodeWeight, maxNodeWeight, nodesWeightSum} = this.state;
+
+        if (this.validateMinMax(minNodeWeight, maxNodeWeight)) {
+
             let numberOfNodes = nodesNumber;
+            let nodesSum = nodesWeightSum;
+
             let nodesArr = [];
             let id = 0;
 
             while (numberOfNodes) {
                 const weight = this.getRandomIntInclusive(parseInt(minNodeWeight, 10), parseInt(maxNodeWeight, 10));
-                console.log(weight);
+                //console.log(weight);
                 const node = {
                     id: id,
                     label: weight,
                     title: id
                 };
+                nodesSum += parseInt(weight, 10);
                 nodesArr.push(node);
                 id++;
                 numberOfNodes--;
             }
+            console.log("Nodes sum", nodesSum);
 
-            this.setState({nodes: nodesArr});
+            this.setState({nodes: nodesArr, nodesWeightSum: nodesSum}, () => callback());
+        }
+    }
+
+    getNeededEdgesWeightSum(callback) {
+        const {minEdgeWeight, maxEdgeWeight, connectivity, nodesWeightSum} = this.state;
+        let edgesSum = null;
+        let correlation = parseInt(connectivity, 10) / 100;
+
+        if (this.validateMinMax(minEdgeWeight, maxEdgeWeight)) {
+            edgesSum = Math.round(nodesWeightSum / correlation - nodesWeightSum);
+            this.setState({edgesWeightSum: edgesSum}, () => callback());
+        }
+    }
+
+    resetSums(callback) {
+        this.setState({
+            nodesWeightSum: null,
+            edgesWeightSum: null
+        }, () => callback());
+    }
+
+    isCycles() {
+        const {nodes, edges} = this.state;
+        const graph = new Graph();
+
+        nodes.forEach(node => graph.addNewVertex(node.id));
+        edges.forEach(edge => graph.createNewEdge(edge.from, edge.to));
+
+        return graph.cycles();
+    }
+
+    generateEdges(callback) {
+        const {edgesWeightSum, nodes, edges, minEdgeWeight, maxEdgeWeight} = this.state;
+        let realEdgesWeightSum = 0;
+        let edgesArr = [];
+        let id = 0;
+
+        //For cycle checking
+        let graph = new Graph();
+        graph.clear();
+        nodes.forEach(node => graph.addNewVertex(node.id));
+
+        //If correlation is 99-100%
+        //There will be no edges
+        if (edgesWeightSum === 0) {
+            this.setState({edges: []}, () => callback());
+        } else {
+            const t0 = performance.now();
+            let startLoopTime = Date.now();
+
+            while (realEdgesWeightSum !== edgesWeightSum) {
+                let insideLoopTime = Date.now();
+                if (insideLoopTime - startLoopTime > 4000) {
+                    break;
+                }
+
+                let indexFrom = this.getRandomIntInclusive(0, nodes.length - 1);
+                let indexTo = this.getRandomIntInclusive(0, nodes.length - 1);
+
+                if (indexFrom !== indexTo &&
+                  !edgesArr.find(edge => (
+                    (edge.from === indexFrom && edge.to === indexTo) ||
+                    (edge.from === indexTo && edge.to === indexFrom)
+                  ))
+                ) {
+                    let weight = this.getRandomIntInclusive(minEdgeWeight, maxEdgeWeight);
+                    if (realEdgesWeightSum + weight > edgesWeightSum) {
+                        realEdgesWeightSum = 0;
+                        edgesArr = [];
+                        id = 0;
+                        graph.clearEdges();
+                        continue;
+                    } else {
+                        //Cycles checking
+                        graph.createNewEdge(indexFrom, indexTo);
+                        const cycles = graph.cycles();
+
+                        let cyclesArr = [];
+                        for (let cycle of cycles) {
+                            cyclesArr.push(cycle);
+                        }
+
+                        if (cyclesArr.length > 0) {
+                            graph.removeEdge(indexFrom, indexTo);
+                            continue;
+                        } else {
+                            const edge = {
+                                id: id,
+                                label: weight.toString(),
+                                from: indexFrom,
+                                to: indexTo
+                            };
+                            edgesArr.push(edge);
+                            realEdgesWeightSum += weight;
+                            id++;
+                        }
+                    }
+
+                } else {
+                    continue;
+                }
+            }
+
+            const t1 = performance.now();
+            console.log("Call to do something took " + (t1 - t0) + " milliseconds.");
+
+            this.setState({edges: edgesArr}, () => callback());
+            console.log("Real edge sum: ", realEdgesWeightSum, "Theor edge sum: ", edgesWeightSum);
         }
     }
 
     generateGraph() {
-
+        this.props.resetGraph(() =>
+          this.resetSums(() => {
+              this.generateNodes(() => {
+                  this.getNeededEdgesWeightSum(() => {
+                      this.generateEdges(() => {
+                          if (this.state.edgesWeightSum !== 0) {
+                              this.props.setNodes(this.state.nodes);
+                              this.props.setEdges(this.state.edges);
+                          } else {
+                              this.props.setNodes(this.state.nodes);
+                          }
+                      });
+                  });
+              });
+          })
+        );
     }
 
     render() {
@@ -183,7 +319,7 @@ export default class GenerationForm extends Component {
                 id="generate-btn"
                 className="btn green"
                 type="submit"
-                onClick={this.generateNodes}
+                onClick={this.generateGraph}
               >
                   Generate
               </button>

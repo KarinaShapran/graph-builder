@@ -104,6 +104,8 @@ class App extends Component {
 
         this.calculate_5 = this.calculate_5.bind(this);
         this.test_5 = this.test_5.bind(this);
+
+        this.resetGraph = this.resetGraph.bind(this);
     }
 
     componentDidMount() {
@@ -215,13 +217,6 @@ class App extends Component {
 
         if (this.state.graphType === "task") {
             const updatedNodes = this.state.nodes.filter((node) => node.id !== nodeId);
-            // let updatedNodes = [];
-            //   this.state.nodes.map((node) => {
-            //     if (node.id === nodeId) {
-            //         updatedNodes.push({});
-            //     } else updatedNodes.push(node);
-            // });
-            //this.setState({nodes: updatedNodes});
             this.setState({nodes: updatedNodes}, () => this.getMatrixObj());
         } else {
             const updatedSysNodes = this.state.sysNodes.filter((node) => node.id !== nodeId);
@@ -730,6 +725,13 @@ class App extends Component {
         this.setState({testResults: result});
     }
 
+    resetGraph(callback) {
+        this.setState({
+            nodes: [],
+            edges: []
+        }, () => callback());
+    }
+
     render() {
         const {
             nodeID,
@@ -911,7 +913,11 @@ class App extends Component {
                             </button>
                         </div>
 
-                      <GenerationForm></GenerationForm>
+                      <GenerationForm
+                        setNodes={this.setNodes}
+                        setEdges={this.setEdges}
+                        resetGraph={this.resetGraph}
+                      />
 
                         <DrawSpace
                           graphType={graphType}

@@ -275,8 +275,10 @@ export default class DrawSpace extends Component {
           <div className="workspace-wrapper">
               <div id="mynetwork"></div>
 
-              <textarea className="area" value={stringNodes} disabled/>
-              <textarea className="area" value={stringEdges} disabled/>
+              <div id="test-container">
+                  <textarea className="area" value={stringNodes} disabled/>
+                  <textarea className="area" value={stringEdges} disabled/>
+              </div>
               <textarea className="area" id="test" value={testResults} disabled/>
 
               <div className="form-control export-form">
