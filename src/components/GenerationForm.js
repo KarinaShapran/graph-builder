@@ -109,7 +109,6 @@ export default class GenerationForm extends Component {
 
             while (numberOfNodes) {
                 const weight = this.getRandomIntInclusive(parseInt(minNodeWeight, 10), parseInt(maxNodeWeight, 10));
-                //console.log(weight);
                 const node = {
                     id: id,
                     label: weight,
@@ -155,7 +154,7 @@ export default class GenerationForm extends Component {
     }
 
     generateEdges(callback) {
-        const {edgesWeightSum, nodes, edges, minEdgeWeight, maxEdgeWeight} = this.state;
+        const {edgesWeightSum, nodes, edges, minEdgeWeight, maxEdgeWeight, connectivity} = this.state;
         let realEdgesWeightSum = 0;
         let edgesArr = [];
         let id = 0;
@@ -181,6 +180,8 @@ export default class GenerationForm extends Component {
 
                 let indexFrom = this.getRandomIntInclusive(0, nodes.length - 1);
                 let indexTo = this.getRandomIntInclusive(0, nodes.length - 1);
+
+                // console.log("from: ", indexFrom, "; to: ", indexTo);
 
                 if (indexFrom !== indexTo &&
                   !edgesArr.find(edge => (
@@ -221,6 +222,36 @@ export default class GenerationForm extends Component {
                         }
                     }
 
+                } else if ( parseInt(connectivity, 10) < 20 && edgesArr.find(edge => (
+                    (edge.from === indexFrom && edge.to === indexTo) ||
+                    (edge.from === indexTo && edge.to === indexFrom)
+                  ))
+                ) {
+                    let weight = this.getRandomIntInclusive(minEdgeWeight, maxEdgeWeight);
+                    let edgeOld = edgesArr.find(edge => (edge.from === indexFrom && edge.to === indexTo) ||
+                      (edge.from === indexTo && edge.to === indexFrom));
+
+                    let newWeight = weight + parseInt(edgeOld.label, 10);
+
+                    const newArr = edgesArr.map(obj => {
+                        if (obj.id === edgeOld.id) {
+                            return {...obj, label: newWeight.toString()};
+                        } else {
+                            return obj;
+                        }
+                    });
+                    edgesArr = [...newArr];
+                    realEdgesWeightSum += weight;
+
+                    if (realEdgesWeightSum > edgesWeightSum) {
+                        realEdgesWeightSum = 0;
+                        edgesArr = [];
+                        id = 0;
+                        graph.clearEdges();
+                        continue;
+                    } else {
+                        continue;
+                    }
                 } else {
                     continue;
                 }
@@ -234,6 +265,9 @@ export default class GenerationForm extends Component {
         }
     }
 
+    correction() {
+
+    }
     generateGraph() {
         this.props.resetGraph(() =>
           this.resetSums(() => {

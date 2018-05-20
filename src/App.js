@@ -718,7 +718,7 @@ class App extends Component {
         const filteredNodes = sortedNodes.filter(node => !criticalPath.includes(node.id));
         const sortedOtherNodes = sortByLength(filteredNodes);
 
-        sortedOtherNodes.forEach(node => result += node.id + " ");
+        sortedOtherNodes.forEach(node => result += node.id + "(" + node.maxLength + ")  ");
 
         console.log(criticalPath, sortedOtherNodes);
 
