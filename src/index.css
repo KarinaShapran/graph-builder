@@ -317,3 +317,8 @@ input:active, input:focus {
   position: absolute;
   background: wheat;
 }
+
+.planning span {
+  min-width: 30px;
+  display: inline-block;
+}

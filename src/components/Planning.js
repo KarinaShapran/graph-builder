@@ -22,6 +22,9 @@ export default class Planning extends Component {
 
         this.modeling = this.modeling.bind(this);
         this.isParentsDataComputed = this.isParentsDataComputed.bind(this);
+        this.startWriting = this.startWriting.bind(this);
+        this.startComputing = this.startComputing.bind(this);
+        this.stopProcess = this.stopProcess.bind(this);
     }
 
     componentDidUpdate (prevProps) {
@@ -67,6 +70,94 @@ export default class Planning extends Component {
         return areAllReady
     }
 
+    startWriting(updatedQueue, freeProcessors, queueIds, edges, tact) {
+        const computedNodes = updatedQueue.filter(queueNode => queueNode.isComputed && !queueNode.isWritten);
+
+        freeProcessors.forEach(freeProcessor => {
+            computedNodes.forEach(computedNode => {
+                if (freeProcessor.isFree && computedNode.writeStarted === undefined) {
+                    const connectedNodesStatusList = [];
+                    let minQueueIndex = 9999;
+                    computedNode.outcomingLinks.forEach(outcomingLink => {
+                        const connectedNode = updatedQueue.find(qN => qN.id === outcomingLink);
+                        connectedNodesStatusList.push({id: connectedNode.id, areParentsComputed: this.isParentsDataComputed(updatedQueue, connectedNode)});
+                    });
+
+                    const computedNodesToBeTransfered = connectedNodesStatusList.filter(node => node.areParentsComputed);
+                    let computedNodeToBeTransfered = null;
+
+                    if (computedNodesToBeTransfered.length === 1) {
+                        computedNodeToBeTransfered = computedNodesToBeTransfered[0];
+                    } else {
+                        const sorted = computedNodesToBeTransfered.sort((a, b) => queueIds.indexOf(a.id) - queueIds.indexOf(b.id));
+                        computedNodeToBeTransfered = sorted[0];
+                    }
+
+                    if (computedNodeToBeTransfered) {
+                        const edgeWeight = edges.find(edge => ((`${edge.from}` === computedNode.id) && (`${edge.to}` === computedNodeToBeTransfered.id))).label;
+                        computedNode.writeStarted = tact;
+                        computedNode.tactsToWrite = edgeWeight;
+                        freeProcessor.isFree = false;
+                        freeProcessor.writing = computedNode.id;
+                        freeProcessor.actionsList.push(`W${computedNode.id}`);
+                    }
+                }
+            });
+        });
+    }
+
+    startComputing(updatedQueue, updatedProcessors, tact) {
+        const freeProcessorsAfterWriting = updatedProcessors.filter(updatedProcessor => updatedProcessor.isFree);
+
+        // For each free processor
+        freeProcessorsAfterWriting.forEach(freeProcessor => {
+            // Get first node from queue which is readyToCompute, is not started
+            const nodeToCompute = updatedQueue.find(
+              queueNode => queueNode.isReadyToCompute && queueNode.started === undefined
+            );
+
+            // If there is node that can be started to be completed in this tact
+            if (nodeToCompute) {
+                // Set the number of started tact
+                nodeToCompute.started = tact;
+                freeProcessor.isFree = false;
+                freeProcessor.computing = nodeToCompute.id;
+                freeProcessor.actionsList.push(nodeToCompute.id)
+            }
+        });
+    }
+
+    stopProcess({updatedQueue, updatedProcessors, tact, banksData, startedField, finishedField, isDoneField, processing, weight, callback}) {
+        const startedNotFinished = updatedQueue.filter(
+          queueNode => queueNode[startedField] !== undefined && queueNode[finishedField] === undefined
+        );
+
+        startedNotFinished.forEach(startedNotFinishedItem => {
+            if (tact - startedNotFinishedItem[startedField] === Number.parseInt(startedNotFinishedItem[weight]) - 1) {
+                startedNotFinishedItem[finishedField] = tact;
+            }
+        });
+
+        const writtenInCurrentTact = updatedQueue.filter(queueNode => queueNode[finishedField] === tact);
+        writtenInCurrentTact.forEach(node => {
+            node[isDoneField] = true;
+
+            const processorToSetFree = updatedProcessors.find(
+              updatedProcessor => {
+                  return updatedProcessor[processing] === node.id
+              }
+            );
+
+            processorToSetFree[processing] = '';
+            processorToSetFree.isFree = true;
+            if (processing === 'computing') {
+                processorToSetFree.completedComputing.push(node.id);
+            } else {
+                callback(node.id);
+            }
+        });
+    }
+
     modeling() {
         const {processors, banks, tact, queue, banksData} = this.state;
         const {nodes, sourceNodes, queueIds, edges} = this.props;
@@ -90,60 +181,6 @@ export default class Planning extends Component {
                }
             });
 
-            const computedNodes = updatedQueue.filter(queueNode => queueNode.isComputed && !queueNode.isWritten);
-            freeProcessors.forEach(freeProcessor => {
-                computedNodes.forEach(computedNode => {
-                    if (freeProcessor.isFree && computedNode.writeStarted === undefined) {
-                        const connectedNodesStatusList = [];
-                        let minQueueIndex = 9999;
-                        computedNode.outcomingLinks.forEach(outcomingLink => {
-                            const connectedNode = updatedQueue.find(qN => qN.id === outcomingLink);
-                            connectedNodesStatusList.push({id: connectedNode.id, areParentsComputed: this.isParentsDataComputed(updatedQueue, connectedNode)});
-                        });
-
-                        const computedNodesToBeTransfered = connectedNodesStatusList.filter(node => node.areParentsComputed);
-                        let computedNodeToBeTransfered = null;
-
-                        if (computedNodesToBeTransfered.length === 1) {
-                            computedNodeToBeTransfered = computedNodesToBeTransfered[0];
-                        } else {
-                            const sorted = computedNodesToBeTransfered.sort((a, b) => queueIds.indexOf(a.id) - queueIds.indexOf(b.id));
-                            computedNodeToBeTransfered = sorted[0];
-                        }
-
-                        if (computedNodeToBeTransfered) {
-                            const edgeWeight = edges.find(edge => ((`${edge.from}` === computedNode.id) && (`${edge.to}` === computedNodeToBeTransfered.id))).label;
-                            computedNode.writeStarted = tact;
-                            computedNode.tactsToWrite = edgeWeight;
-                            freeProcessor.isFree = false;
-                            freeProcessor.writing = computedNode.id;
-                            freeProcessor.actionsList.push(`W${computedNode.id}`);
-                        }
-                    }
-                });
-            });
-
-            const freeProcessorsAfterWriting = updatedProcessors.filter(updatedProcessor => updatedProcessor.isFree);
-
-            // For each free processor
-            freeProcessorsAfterWriting.forEach(freeProcessor => {
-                // Get first node from queue which is readyToCompute, is not started
-                const nodeToCompute = updatedQueue.find(
-                  queueNode => queueNode.isReadyToCompute && queueNode.started === undefined
-                );
-
-                // If there is node that can be started to be completed in this tact
-                if (nodeToCompute) {
-                    // Set the number of started tact
-                    nodeToCompute.started = tact;
-                    freeProcessor.isFree = false;
-                    freeProcessor.computing = nodeToCompute.id;
-                    freeProcessor.actionsList.push(nodeToCompute.id)
-                } else {
-                    freeProcessor.actionsList.push('_');
-                }
-            });
-
             busyProcessors.forEach(busyProcessor => {
                 if(busyProcessor.writing) {
                     busyProcessor.actionsList.push(`W${busyProcessor.writing}`);
@@ -152,53 +189,36 @@ export default class Planning extends Component {
                 }
             });
 
-            const startedNotFinishedWritings = updatedQueue.filter(
-              queueNode => queueNode.writeStarted !== undefined && queueNode.writeFinished === undefined
-            );
+            this.startWriting(updatedQueue, freeProcessors, queueIds, edges, tact);
 
-            startedNotFinishedWritings.forEach(startedNotFinishedWriting => {
-               if (tact - startedNotFinishedWriting.writeStarted === Number.parseInt(startedNotFinishedWriting.tactsToWrite) - 1) {
-                   startedNotFinishedWriting.writeFinished = tact;
-               }
+            this.startComputing(updatedQueue, updatedProcessors, tact);
+
+            const freeProcessorsAfterAll = updatedProcessors.filter(processor => processor.isFree);
+            freeProcessorsAfterAll.forEach(freeProcessor => {
+                freeProcessor.actionsList.push('_')
             });
 
-            const writtenInCurrentTact = updatedQueue.filter(queueNode => queueNode.writeFinished === tact);
-            writtenInCurrentTact.forEach(node => {
-               node.isWritten = true;
-
-               const processorToSetFree = updatedProcessors.find(
-                 updatedProcessor => {
-                     console.log('updatedProcessor.writing', updatedProcessor.writing, 'node.id', node.id);
-                     return updatedProcessor.writing === node.id
-                 }
-               );
-
-               processorToSetFree.writing = '';
-               processorToSetFree.isFree = true;
-               banksData.push(node.id);
+            this.stopProcess({
+                updatedQueue,
+                updatedProcessors,
+                tact,
+                startedField: 'writeStarted',
+                finishedField: 'writeFinished',
+                weight: 'tactsToWrite',
+                isDoneField: 'isWritten',
+                processing: 'writing',
+                callback: (id) => banksData.push(id)
             });
 
-            const startedNotFinished = updatedQueue.filter(
-              queueNode => queueNode.started !== undefined && queueNode.finished === undefined
-            );
-
-            startedNotFinished.forEach(startedNotFinishedNode => {
-               if (tact - startedNotFinishedNode.started == Number.parseInt(startedNotFinishedNode.weight) - 1) {
-                   startedNotFinishedNode.finished = tact;
-               }
-            });
-
-            // At the very end of tact set isReady = true for nodes that finished in current tact
-            const finishedInCurrentTact = updatedQueue.filter(queueNode => queueNode.finished === tact);
-            finishedInCurrentTact.forEach(node => {
-                node.isComputed = true;
-                const processorToSetFree = updatedProcessors.find(
-                  updatedProcessor => updatedProcessor.computing === node.id
-                );
-
-                processorToSetFree.computing = "";
-                processorToSetFree.isFree = true;
-                processorToSetFree.completedComputing.push(node.id);
+            this.stopProcess({
+                updatedQueue,
+                updatedProcessors,
+                tact,
+                startedField: 'started',
+                finishedField: 'finished',
+                weight: 'weight',
+                isDoneField: 'isComputed',
+                processing: 'computing'
             });
 
             console.log(updatedProcessors.map(p => p.isFree));
