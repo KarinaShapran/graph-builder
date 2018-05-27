@@ -13,7 +13,7 @@ export default class Planning extends Component {
             banks: [
                 {id: 0, isFree: true, actionsList: [], currentAction: ""},
                 {id: 1, isFree: true, actionsList: [], currentAction: ""},
-                {id: 2, isFree: true, actionsList: [], currentAction: ""}],
+            ],
             banksData: [],
             tact: 1,
             queue: [],
@@ -70,12 +70,12 @@ export default class Planning extends Component {
         return areAllReady
     }
 
-    startWriting(updatedQueue, freeProcessors, queueIds, edges, tact) {
+    startWriting(updatedQueue, freeBanks, freeProcessors, queueIds, edges, tact) {
         const computedNodes = updatedQueue.filter(queueNode => queueNode.isComputed && !queueNode.isWritten);
 
-        freeProcessors.forEach(freeProcessor => {
+        freeProcessors.forEach((freeProcessor, index) => {
             computedNodes.forEach(computedNode => {
-                if (freeProcessor.isFree && computedNode.writeStarted === undefined) {
+                if (freeProcessor.isFree && computedNode.writeStarted === undefined && freeBanks[index]) {
                     const connectedNodesStatusList = [];
                     let minQueueIndex = 9999;
                     computedNode.outcomingLinks.forEach(outcomingLink => {
@@ -100,10 +100,15 @@ export default class Planning extends Component {
                         freeProcessor.isFree = false;
                         freeProcessor.writing = computedNode.id;
                         freeProcessor.actionsList.push(`W${computedNode.id}`);
+                        freeBanks[index].isFree = false;
+                        freeBanks[index].currentAction = computedNode.id;
+                        freeBanks[index].actionsList.push(`W${computedNode.id}`);
                     }
                 }
             });
         });
+
+        freeBanks.filter(exFreeBank => exFreeBank.isFree).forEach(freeBank => {freeBank.actionsList.push('_')})
     }
 
     startComputing(updatedQueue, updatedProcessors, tact) {
@@ -127,7 +132,7 @@ export default class Planning extends Component {
         });
     }
 
-    stopProcess({updatedQueue, updatedProcessors, tact, banksData, startedField, finishedField, isDoneField, processing, weight, callback}) {
+    stopProcess({updatedQueue, updatedProcessors, updatedBanks, bankAction, tact, banksData, startedField, finishedField, isDoneField, processing, weight, callback}) {
         const startedNotFinished = updatedQueue.filter(
           queueNode => queueNode[startedField] !== undefined && queueNode[finishedField] === undefined
         );
@@ -155,6 +160,15 @@ export default class Planning extends Component {
             } else {
                 callback(node.id);
             }
+
+            if (processing === 'writing') {
+                const bankToSetFree = updatedBanks.find(
+                  updatedBank => updatedBank.currentAction === node.id
+                );
+
+                bankToSetFree.currentAction = '';
+                bankToSetFree.isFree = true;
+            }
         });
     }
 
@@ -164,10 +178,12 @@ export default class Planning extends Component {
 
         const updatedQueue = [...queue];
         const updatedProcessors = [...processors];
+        const updatedBanks = [...banks];
 
+        const freeBanks = updatedBanks.filter(bank => bank.isFree);
+        const busyBanks = updatedBanks.filter(bank => !bank.isFree);
         const freeProcessors = updatedProcessors.filter(processor => processor.isFree);
         const busyProcessors = updatedProcessors.filter(processor => !processor.isFree);
-
 
         if (updatedQueue.find(node => node.isComputed === undefined)) {
             console.log('tact', tact);
@@ -181,6 +197,9 @@ export default class Planning extends Component {
                }
             });
 
+            busyBanks.forEach(busyBank => {
+               busyBank.actionsList.push(`W${busyBank.currentAction}`)
+            });
             busyProcessors.forEach(busyProcessor => {
                 if(busyProcessor.writing) {
                     busyProcessor.actionsList.push(`W${busyProcessor.writing}`);
@@ -189,7 +208,7 @@ export default class Planning extends Component {
                 }
             });
 
-            this.startWriting(updatedQueue, freeProcessors, queueIds, edges, tact);
+            this.startWriting(updatedQueue, freeBanks, freeProcessors, queueIds, edges, tact);
 
             this.startComputing(updatedQueue, updatedProcessors, tact);
 
@@ -201,6 +220,7 @@ export default class Planning extends Component {
             this.stopProcess({
                 updatedQueue,
                 updatedProcessors,
+                updatedBanks,
                 tact,
                 startedField: 'writeStarted',
                 finishedField: 'writeFinished',
@@ -244,6 +264,15 @@ export default class Planning extends Component {
                   return <div>
                       {processor.actionsList.map(action => {
                           return <span>{action}  </span>
+                      })}
+                  </div>
+              })}
+              <br/>
+              <br/>
+              {this.state.banks.map(bank => {
+                  return <div>
+                      {bank.actionsList.map(action => {
+                          return <span>{action}</span>
                       })}
                   </div>
               })}
