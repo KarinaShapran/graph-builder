@@ -58,6 +58,7 @@ class App extends Component {
             testResults: "",
 
             queue5: [],
+            queue5Ids: [],
             sourceNodes: []
         };
 
@@ -734,8 +735,11 @@ class App extends Component {
         const criticalPathWithLinks = nodesWithLinks.filter(node => criticalPath.includes(node.id));
 
         const queue = [...criticalPathWithLinks, ...sortedOtherNodes];
+        const queueIds = [];
 
         queue.forEach(node => {
+            queueIds.push(`${node.id}`);
+
             edges.forEach(edge => {
                 if (edge.to == node.id) {
                     // node.parents = Array.isArray(node.parents) ? [...edge.to];
@@ -749,8 +753,9 @@ class App extends Component {
         });
 
         console.log("queue", queue);
+        console.log("queueIds", queueIds);
 
-        this.setState({testResults: result, queue5: queue});
+        this.setState({testResults: result, queue5: queue, queue5Ids: queueIds});
     }
 
     resetGraph(callback) {
@@ -783,6 +788,7 @@ class App extends Component {
 
             testResults,
             queue5,
+            queue5Ids,
             sourceNodes
         } = this.state;
 
@@ -976,6 +982,7 @@ class App extends Component {
                         />
                       <Planning
                         queue={queue5}
+                        queueIds={queue5Ids}
                         nodes={nodes}
                         edges={edges}
                         sourceNodes={sourceNodes}
