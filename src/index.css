@@ -316,6 +316,8 @@ input:active, input:focus {
 .planning {
   position: absolute;
   background: wheat;
+  top: 750px;
+  right: 0;
 }
 
 .planning span {

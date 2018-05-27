@@ -74,8 +74,10 @@ export default class Planning extends Component {
         const computedNodes = updatedQueue.filter(queueNode => queueNode.isComputed && !queueNode.isWritten);
 
         freeProcessors.forEach((freeProcessor, index) => {
-            computedNodes.forEach(computedNode => {
-                if (freeProcessor.isFree && computedNode.writeStarted === undefined && freeBanks[index]) {
+            computedNodes.filter(node => freeProcessor.completedComputing.includes(node.id)).forEach(computedNode => {
+                const reallyFreeBank = freeBanks.find(exFreeBank => exFreeBank.isFree);
+
+                if (freeProcessor.isFree && computedNode.writeStarted === undefined && reallyFreeBank) {
                     const connectedNodesStatusList = [];
                     let minQueueIndex = 9999;
                     computedNode.outcomingLinks.forEach(outcomingLink => {
@@ -100,9 +102,9 @@ export default class Planning extends Component {
                         freeProcessor.isFree = false;
                         freeProcessor.writing = computedNode.id;
                         freeProcessor.actionsList.push(`W${computedNode.id}`);
-                        freeBanks[index].isFree = false;
-                        freeBanks[index].currentAction = computedNode.id;
-                        freeBanks[index].actionsList.push(`W${computedNode.id}`);
+                        reallyFreeBank.isFree = false;
+                        reallyFreeBank.currentAction = computedNode.id;
+                        reallyFreeBank.actionsList.push(`W${computedNode.id}`);
                     }
                 }
             });
@@ -185,7 +187,8 @@ export default class Planning extends Component {
         const freeProcessors = updatedProcessors.filter(processor => processor.isFree);
         const busyProcessors = updatedProcessors.filter(processor => !processor.isFree);
 
-        if (updatedQueue.find(node => node.isComputed === undefined)) {
+        // if (updatedQueue.find(node => node.isComputed === undefined)) {
+        if (tact < 15) {
             console.log('tact', tact);
 
             // At the very beginning of tact set isReadyToCompute = true for nodes that depend on recently finished nodes
