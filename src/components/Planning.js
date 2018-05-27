@@ -11,10 +11,9 @@ export default class Planning extends Component {
               {id: 1, isFree: true, actionsList: [], computing: "", completedComputing: [], writing: ''},
               {id: 2, isFree: true, actionsList: [], computing: "", completedComputing: [], writing: ''}],
             banks: [
-                {id: 0, isFree: true, actionsList: [], currentAction: ""},
-                {id: 1, isFree: true, actionsList: [], currentAction: ""},
+                {id: 0, isFree: true, actionsList: [], currentAction: "", data: []},
+                {id: 1, isFree: true, actionsList: [], currentAction: "", data: []},
             ],
-            banksData: [],
             tact: 1,
             queue: [],
             mode: 1,
@@ -73,7 +72,7 @@ export default class Planning extends Component {
     startWriting(updatedQueue, freeBanks, freeProcessors, queueIds, edges, tact) {
         const computedNodes = updatedQueue.filter(queueNode => queueNode.isComputed && !queueNode.isWritten);
 
-        freeProcessors.forEach((freeProcessor, index) => {
+        freeProcessors.forEach(freeProcessor => {
             computedNodes.filter(node => freeProcessor.completedComputing.includes(node.id)).forEach(computedNode => {
                 const reallyFreeBank = freeBanks.find(exFreeBank => exFreeBank.isFree);
 
@@ -134,7 +133,7 @@ export default class Planning extends Component {
         });
     }
 
-    stopProcess({updatedQueue, updatedProcessors, updatedBanks, bankAction, tact, banksData, startedField, finishedField, isDoneField, processing, weight, callback}) {
+    stopProcess({updatedQueue, updatedProcessors, updatedBanks, bankAction, tact, startedField, finishedField, isDoneField, processing, weight}) {
         const startedNotFinished = updatedQueue.filter(
           queueNode => queueNode[startedField] !== undefined && queueNode[finishedField] === undefined
         );
@@ -159,8 +158,6 @@ export default class Planning extends Component {
             processorToSetFree.isFree = true;
             if (processing === 'computing') {
                 processorToSetFree.completedComputing.push(node.id);
-            } else {
-                callback(node.id);
             }
 
             if (processing === 'writing') {
@@ -170,12 +167,13 @@ export default class Planning extends Component {
 
                 bankToSetFree.currentAction = '';
                 bankToSetFree.isFree = true;
+                bankToSetFree.data.push(node.id);
             }
         });
     }
 
     modeling() {
-        const {processors, banks, tact, queue, banksData} = this.state;
+        const {processors, banks, tact, queue} = this.state;
         const {nodes, sourceNodes, queueIds, edges} = this.props;
 
         const updatedQueue = [...queue];
@@ -192,7 +190,7 @@ export default class Planning extends Component {
             console.log('tact', tact);
 
             // At the very beginning of tact set isReadyToCompute = true for nodes that depend on recently finished nodes
-            queue.forEach(node => {
+            updatedQueue.forEach(node => {
                if (!node.isReadyToCompute) {
                    if (this.isParentsDataComputed(queue, node)) {
                        node.isReadyToCompute = true;
@@ -229,8 +227,7 @@ export default class Planning extends Component {
                 finishedField: 'writeFinished',
                 weight: 'tactsToWrite',
                 isDoneField: 'isWritten',
-                processing: 'writing',
-                callback: (id) => banksData.push(id)
+                processing: 'writing'
             });
 
             this.stopProcess({
