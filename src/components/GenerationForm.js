@@ -222,7 +222,7 @@ export default class GenerationForm extends Component {
                         }
                     }
 
-                } else if ( parseInt(connectivity, 10) < 20 && edgesArr.find(edge => (
+                } else if ( parseInt(connectivity, 10) < 30 && edgesArr.find(edge => (
                     (edge.from === indexFrom && edge.to === indexTo) ||
                     (edge.from === indexTo && edge.to === indexFrom)
                   ))

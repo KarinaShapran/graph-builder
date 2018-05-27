@@ -312,3 +312,8 @@ input:active, input:focus {
 #test-container .area {
   width: 220px;
 }
+
+.planning {
+  position: absolute;
+  background: wheat;
+}

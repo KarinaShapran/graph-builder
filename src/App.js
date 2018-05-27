@@ -11,6 +11,7 @@ import {
 } from "./sort";
 
 import './index.css';
+import Planning from "./components/Planning";
 
 class App extends Component {
     constructor() {
@@ -54,7 +55,10 @@ class App extends Component {
             isActiveEditEdgeForm: false,
 
             message: "",
-            testResults: ""
+            testResults: "",
+
+            queue5: [],
+            sourceNodes: []
         };
 
         this.handleChangeNodeWeight = this.handleChangeNodeWeight.bind(this);
@@ -671,6 +675,11 @@ class App extends Component {
             sinkVertices.push(key);
         }
 
+        let sourceNodes = [];
+        for (let [key] of graph.sources()) {
+            sourceNodes.push(key);
+        }
+
         //Set new prop of Node, maxLength, to 1 for sink nodes
         const copyNodesWithLinks = [...nodesWithLinks];
         copyNodesWithLinks.forEach(node => {
@@ -703,12 +712,13 @@ class App extends Component {
                 }
             });
         });
-        this.setState({criticalPath: criticalPath});
+        this.setState({criticalPath: criticalPath, sourceNodes});
 
         return {sortedNodes: sortByMaxLength([...sinkNodes, ...sourceVertices]), criticalPath};
     }
 
     test_5() {
+        const {nodes, edges, nodesWithLinks} = this.state;
         const {sortedNodes, criticalPath} = this.calculate_5();
 
         let result = "Test 5:\n";
@@ -720,9 +730,27 @@ class App extends Component {
 
         sortedOtherNodes.forEach(node => result += node.id + "(" + node.maxLength + ")  ");
 
-        console.log(criticalPath, sortedOtherNodes);
+        //console.log(criticalPath, sortedOtherNodes);
+        const criticalPathWithLinks = nodesWithLinks.filter(node => criticalPath.includes(node.id));
 
-        this.setState({testResults: result});
+        const queue = [...criticalPathWithLinks, ...sortedOtherNodes];
+
+        queue.forEach(node => {
+            edges.forEach(edge => {
+                if (edge.to == node.id) {
+                    // node.parents = Array.isArray(node.parents) ? [...edge.to];
+                    if (Array.isArray(node.parents)) {
+                        node.parents.push(`${edge.from}`);
+                    } else {
+                        node.parents = [`${edge.from}`]
+                    }
+                }
+            })
+        });
+
+        console.log("queue", queue);
+
+        this.setState({testResults: result, queue5: queue});
     }
 
     resetGraph(callback) {
@@ -734,6 +762,9 @@ class App extends Component {
 
     render() {
         const {
+            nodes,
+            edges,
+
             nodeID,
             edgeID,
 
@@ -750,7 +781,9 @@ class App extends Component {
             idEdgeEdit,
             idSysEdgeEdit,
 
-            testResults
+            testResults,
+            queue5,
+            sourceNodes
         } = this.state;
 
         return (
@@ -941,6 +974,12 @@ class App extends Component {
 
                           testResults={testResults}
                         />
+                      <Planning
+                        queue={queue5}
+                        nodes={nodes}
+                        edges={edges}
+                        sourceNodes={sourceNodes}
+                      />
                     </div>
 
                     : <div className="content-container">
