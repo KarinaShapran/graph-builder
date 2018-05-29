@@ -1,6 +1,26 @@
 import React, {Component} from 'react';
 import Graph from 'graph.js';
 
+const shuffle = (array) => {
+    // return array
+    var currentIndex = array.length, temporaryValue, randomIndex;
+
+    // While there remain elements to shuffle...
+    while (0 !== currentIndex) {
+
+        // Pick a remaining element...
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex -= 1;
+
+        // And swap it with the current element.
+        temporaryValue = array[currentIndex];
+        array[currentIndex] = array[randomIndex];
+        array[randomIndex] = temporaryValue;
+    }
+
+    return array;
+};
+
 export default class Planning extends Component {
 
     constructor() {
@@ -100,7 +120,7 @@ export default class Planning extends Component {
     startWriting(updatedQueue, freeBanks, freeProcessors, queueIds, edges, tact) {
         const computedNodes = updatedQueue.filter(queueNode => queueNode.isComputed && !queueNode.isWritten);
 
-        freeProcessors.forEach(freeProcessor => {
+        shuffle(freeProcessors).forEach(freeProcessor => {
             computedNodes.filter(node => freeProcessor.completedComputing.includes(node.id)).forEach(computedNode => {
                 const reallyFreeBank = freeBanks.find(exFreeBank => exFreeBank.isFree);
 
@@ -146,7 +166,7 @@ export default class Planning extends Component {
         const freeProcessorsAfterWriting = updatedProcessors.filter(updatedProcessor => updatedProcessor.isFree);
 
         // For each free processor
-        freeProcessorsAfterWriting.forEach(freeProcessor => {
+        shuffle(freeProcessorsAfterWriting).forEach(freeProcessor => {
             const nodeThatRequireData = updatedQueue.find(
               queueNode => queueNode.isReadyToRead && queueNode.links && queueNode.linksArr.some(parent => !parent.isRead)
             );
@@ -269,10 +289,6 @@ export default class Planning extends Component {
     }
 
     stopProcess({updatedQueue, updatedProcessors, updatedBanks, tact, startedField, finishedField, isDoneField, processing, weight}) {
-        // if (tact >= 16 && processing === 'reading') {
-        //     debugger
-        // }
-
         const startedNotFinished = updatedQueue.filter(
           queueNode => queueNode[startedField] !== undefined && queueNode[finishedField] === undefined
         );
@@ -339,7 +355,6 @@ export default class Planning extends Component {
         const busyProcessors = updatedProcessors.filter(processor => !processor.isFree);
 
         if (updatedQueue.find(node => node.isComputed === undefined)) {
-        // if (tact < 25) {
             console.log('tact', tact);
             // TODO waiting
             busyProcessors.filter(busyProcessor => busyProcessor.isWaiting).forEach(waitingProcessor => {

@@ -316,12 +316,12 @@ input:active, input:focus {
 .planning {
   position: absolute;
   background: wheat;
-  top: 750px;
+  top: 150px;
   right: 0;
 }
 
 .planning span {
-  min-width: 40px;
+  min-width: 30px;
   display: inline-block;
   border: 1px solid white;
 }
