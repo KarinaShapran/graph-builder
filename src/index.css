@@ -321,7 +321,7 @@ input:active, input:focus {
 }
 
 .planning span {
-  min-width: 55px;
+  min-width: 40px;
   display: inline-block;
   border: 1px solid white;
 }

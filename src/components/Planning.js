@@ -131,7 +131,7 @@ export default class Planning extends Component {
                         computedNode.tactsToWrite = edgeWeight;
                         freeProcessor.isFree = false;
                         freeProcessor.writing = computedNode.id;
-                        freeProcessor.actionsList.push(`W${computedNode.id} (${tact})`);
+                        freeProcessor.actionsList.push(`W${computedNode.id}`);
                         reallyFreeBank.isFree = false;
                         reallyFreeBank.currentAction = computedNode.id;
                         reallyFreeBank.actionsList.push(`W${computedNode.id}`);
@@ -150,6 +150,12 @@ export default class Planning extends Component {
             const nodeThatRequireData = updatedQueue.find(
               queueNode => queueNode.isReadyToRead && queueNode.links && queueNode.linksArr.some(parent => !parent.isRead)
             );
+            const areNodeParentsReading = updatedProcessors.find(proc => {
+                if (nodeThatRequireData) {
+                    return proc.isReadingParentsOf ===  nodeThatRequireData.id
+                }
+                return false;
+            });
 
             // if (freeProcessor.banksWithData && freeProcessor.banksWithData.length) {
             //     // debugger
@@ -181,7 +187,25 @@ export default class Planning extends Component {
             //     return null
             // }
 
-            if (nodeThatRequireData) {
+            if (freeProcessor.shouldCompute) {
+                // Get first node from queue which is readyToCompute, is not started
+                const nodeToCompute = updatedQueue.find(
+                  queueNode => queueNode.id === freeProcessor.shouldCompute
+                );
+
+                // If there is node that can be started to be completed in this tact
+                if (nodeToCompute) {
+                    // Set the number of started tact
+                    nodeToCompute.started = tact;
+                    freeProcessor.isFree = false;
+                    freeProcessor.computing = nodeToCompute.id;
+                    freeProcessor.actionsList.push(nodeToCompute.id)
+                }
+
+                return null;
+            }
+
+            if (nodeThatRequireData && (freeProcessor.isReadingParentsOf === nodeThatRequireData.id || !areNodeParentsReading)) {
                 let parentToRead = null;
                 let bankWithData = null;
                 const banksWithData = [];
@@ -199,6 +223,7 @@ export default class Planning extends Component {
 
                 if (parentToRead) {
                     this.startReading({parentToRead, freeProcessor, bankWithData, tact, nodeThatRequireData});
+                    freeProcessor.isReadingParentsOf = nodeThatRequireData.id;
                 } else {
                     freeProcessor.actionsList.push(`**`);
                     freeProcessor.banksWithData = banksWithData;
@@ -211,7 +236,7 @@ export default class Planning extends Component {
             } else {
                 // Get first node from queue which is readyToCompute, is not started
                 const nodeToCompute = updatedQueue.find(
-                  queueNode => queueNode.isReadyToCompute && queueNode.started === undefined
+                  queueNode => queueNode.isReadyToCompute && queueNode.started === undefined && !queueNode.links
                 );
 
                 // If there is node that can be started to be completed in this tact
@@ -243,9 +268,9 @@ export default class Planning extends Component {
     }
 
     stopProcess({updatedQueue, updatedProcessors, updatedBanks, tact, startedField, finishedField, isDoneField, processing, weight}) {
-        if (tact === 12 && processing === 'reading') {
-            // debugger
-        }
+        // if (tact >= 16 && processing === 'reading') {
+        //     debugger
+        // }
 
         const startedNotFinished = updatedQueue.filter(
           queueNode => queueNode[startedField] !== undefined && queueNode[finishedField] === undefined
@@ -267,6 +292,7 @@ export default class Planning extends Component {
             processorToSetFree.isFree = true;
             if (processing === 'computing') {
                 processorToSetFree.completedComputing.push(node.id);
+                processorToSetFree.shouldCompute = null;
             }
 
             if (processing === 'reading') {
@@ -280,6 +306,10 @@ export default class Planning extends Component {
                 const nodeThatRequireData = updatedQueue.find(n => n.id === node.nodeThatRequireDataId);
                 const parent = nodeThatRequireData.linksArr.find(parent => parent.id === node.id);
                 parent.isRead = true;
+                if (this.isParentsDataRead([], nodeThatRequireData)) {
+                    processorToSetFree.isReadingParentsOf = null;
+                    processorToSetFree.shouldCompute = nodeThatRequireData.id;
+                }
             }
 
             if (processing === 'writing') {
@@ -341,10 +371,10 @@ export default class Planning extends Component {
                 }
             });
 
-            const realBusyProcessors = updatedProcessors.filter(proc => !proc.isFree)
+            const realBusyProcessors = updatedProcessors.filter(proc => !proc.isFree);
             realBusyProcessors.forEach(busyProcessor => {
                 if (busyProcessor.writing) {
-                    busyProcessor.actionsList.push(`W${busyProcessor.writing} (${tact})`);
+                    busyProcessor.actionsList.push(`W${busyProcessor.writing}`);
                 } else if (busyProcessor.reading) {
                     busyProcessor.actionsList.push(`R${busyProcessor.reading}`);
                 } else {
