@@ -146,6 +146,7 @@ input:active, input:focus {
 
 .tabs-container {
   padding: 10px 20px;
+    display: flex;
 }
 
 .tab-link {
@@ -315,13 +316,51 @@ input:active, input:focus {
 
 .planning {
   position: absolute;
-  background: wheat;
+  /*background: #e7dcf9;*/
+  background: white;
   top: 150px;
   right: 0;
+    border: 2px solid #784e8c;
+    margin-right: 20px;
 }
 
 .planning span {
-  min-width: 30px;
+  min-width: 45px;
   display: inline-block;
-  border: 1px solid white;
+  border: 1px solid rgba(120, 78, 140, 0.51);
+    text-align: center;
+    padding: 2px 0;
+    color: #6f749a;
+}
+
+.form-control.planner {
+    max-width: 650px;
+ float: none;
+ display: flex;
+ flex-direction: row;
+    padding: 10px 0 10px 10px;
+    margin-top: 10px;
+}
+
+.planner .cell {
+    margin-right: 10px;
+}
+
+.cell label {
+    display: inline;
+    margin-right: 10px;
+}
+
+.cell input {
+    border-radius: 8px;
+    width: 125px;
+}
+
+.table-index {
+    background: white;
+}
+
+.table-index span {
+    font-weight: bold;
+    color: #784e8c;
 }

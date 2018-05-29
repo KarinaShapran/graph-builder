@@ -59,7 +59,10 @@ class App extends Component {
 
             queue5: [],
             queue5Ids: [],
-            sourceNodes: []
+            sourceNodes: [],
+
+            processors: null,
+            banks: null
         };
 
         this.handleChangeNodeWeight = this.handleChangeNodeWeight.bind(this);
@@ -111,6 +114,10 @@ class App extends Component {
         this.test_5 = this.test_5.bind(this);
 
         this.resetGraph = this.resetGraph.bind(this);
+
+        this.handleChangeNumberOfProcessors = this.handleChangeNumberOfProcessors.bind(this);
+        this.handleChangeNumberOfBanks = this.handleChangeNumberOfBanks.bind(this);
+        // this.handleSubmitParameters = this.handleSubmitParameters.bind(this);
     }
 
     componentDidMount() {
@@ -765,6 +772,14 @@ class App extends Component {
         }, () => callback());
     }
 
+    handleChangeNumberOfProcessors(e) {
+        this.setState({processors: e.target.value});
+    }
+
+    handleChangeNumberOfBanks(e) {
+        this.setState({banks: e.target.value});
+    }
+
     render() {
         const {
             nodes,
@@ -789,7 +804,9 @@ class App extends Component {
             testResults,
             queue5,
             queue5Ids,
-            sourceNodes
+            sourceNodes,
+            processors,
+            banks
         } = this.state;
 
         return (
@@ -919,6 +936,27 @@ class App extends Component {
                   >
                       System Graph
                   </button>
+
+                  <div className="form-control planner">
+                      <div className="cell">
+                          <label htmlFor="processors" className="form-title">Number of processors:</label>
+                          <input
+                            className="input"
+                            id="processors"
+                            placeholder="Type number"
+                            onChange={(e) => this.handleChangeNumberOfProcessors(e)}
+                          />
+                      </div>
+                      <div className="cell">
+                          <label htmlFor="banks" className="form-title">Number of banks:</label>
+                          <input
+                            className="input"
+                            id="banks"
+                            placeholder="Type number"
+                            onChange={(e) => this.handleChangeNumberOfBanks(e)}
+                          />
+                      </div>
+                  </div>
               </div>
 
               {
@@ -986,6 +1024,8 @@ class App extends Component {
                         nodes={nodes}
                         edges={edges}
                         sourceNodes={sourceNodes}
+                        processors={processors}
+                        banks={banks}
                       />
                     </div>
 

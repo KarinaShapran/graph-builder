@@ -1,5 +1,4 @@
 import React, {Component} from 'react';
-import Graph from 'graph.js';
 
 const shuffle = (array) => {
     // return array
@@ -26,14 +25,8 @@ export default class Planning extends Component {
     constructor() {
         super();
         this.state = {
-            processors: [
-                {id: 0, isFree: true, actionsList: [], computing: "", completedComputing: [], writing: ''},
-                {id: 1, isFree: true, actionsList: [], computing: "", completedComputing: [], writing: ''},
-                {id: 2, isFree: true, actionsList: [], computing: "", completedComputing: [], writing: ''}],
-            banks: [
-                {id: 0, isFree: true, actionsList: [], currentAction: "", data: []},
-                {id: 1, isFree: true, actionsList: [], currentAction: "", data: []},
-            ],
+            processors: [],
+            banks: [],
             tact: 1,
             queue: [],
             mode: 1,
@@ -50,6 +43,36 @@ export default class Planning extends Component {
     }
 
     componentDidUpdate(prevProps) {
+
+        if (!prevProps.processors && this.props.processors || !prevProps.banks && this.props.banks ) {
+            const generatedProcessors = [];
+            const generatedBanks = [];
+
+            for (let i = 0; i < this.props.processors; i++) {
+                generatedProcessors.push({
+                    id: i,
+                    isFree: true,
+                    actionsList: [],
+                    computing: "",
+                    completedComputing: [],
+                    writing: ''
+                });
+            }
+
+            for (let i = 0; i < this.props.banks; i++) {
+                generatedBanks.push({
+                    id: i,
+                    isFree: true,
+                    actionsList: [],
+                    currentAction: "",
+                    data: []
+                });
+            }
+            this.setState({
+                processors: generatedProcessors,
+                banks: generatedBanks
+            });
+        }
 
         if (!prevProps.queue.length && this.props.queue.length) {
             console.log(this.props.queue);
@@ -274,7 +297,7 @@ export default class Planning extends Component {
     startReading({parentToRead, freeProcessor, bankWithData, tact, nodeThatRequireData}) {
         freeProcessor.isFree = false;
         freeProcessor.reading = parentToRead.id;
-        freeProcessor.actionsList.push(`R${parentToRead.id}`);
+        freeProcessor.actionsList.push(`R${parentToRead.id}>${nodeThatRequireData.id}`);
 
         bankWithData.isFree = false;
         bankWithData.currentAction = parentToRead.id;
@@ -392,7 +415,7 @@ export default class Planning extends Component {
                 if (busyProcessor.writing) {
                     busyProcessor.actionsList.push(`W${busyProcessor.writing}`);
                 } else if (busyProcessor.reading) {
-                    busyProcessor.actionsList.push(`R${busyProcessor.reading}`);
+                    busyProcessor.actionsList.push(`R${busyProcessor.reading}>${busyProcessor.isReadingParentsOf}`);
                 } else {
                     busyProcessor.actionsList.push(busyProcessor.computing);
                 }
@@ -461,10 +484,24 @@ export default class Planning extends Component {
     render() {
         return (
           <div className={'planning'}>
+              {this.state.processors.map((processor, index) => {
+                  if (index === 0) {
+                      return <div className="table-index">
+                          {
+                              processor.actionsList.map((action, index) => {
+                                  return <span>{index}</span>
+                              })}
+                      </div>
+                  } else {
+                      return null;
+                  }
+
+              })
+              }
               {this.state.processors.map(processor => {
                   return <div>
                       {processor.actionsList.map(action => {
-                          return <span>{action}  </span>
+                          return <span>{action}</span>
                       })}
                   </div>
               })}
