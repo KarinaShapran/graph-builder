@@ -42,7 +42,7 @@ export default class Planning extends Component {
                     parents.forEach(parent => {
                         parentsArr.push({
                             id: parent,
-                            isRead: false
+                            isRead: false,
                         })
                     });
 
@@ -54,7 +54,7 @@ export default class Planning extends Component {
             const queueWithWeigth = queueWithoutMaxLength.map(node => {
                 const nodeWithWeight = this.props.nodes.find(n => n.id == node.id);
 
-                return {...node, weight: nodeWithWeight.label, weightToRead: 1}
+                return {...node, weight: nodeWithWeight.label, weightToRead: 0}
             });
 
             this.props.sourceNodes.forEach(sourceNodeId => {
@@ -265,6 +265,7 @@ export default class Planning extends Component {
         parentToRead.nodeThatRequireDataId = nodeThatRequireData.id;
         parentToRead.isRead = false;
         parentToRead.readFinished = undefined;
+        parentToRead.weightToRead = this.props.edges.find(edge => edge.from == parentToRead.id && edge.to == nodeThatRequireData.id).label
     }
 
     stopProcess({updatedQueue, updatedProcessors, updatedBanks, tact, startedField, finishedField, isDoneField, processing, weight}) {
