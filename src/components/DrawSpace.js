@@ -33,29 +33,29 @@ export default class DrawSpace extends Component {
         this.showEdges(edges);
         this.showNodes(nodes);
         this.setState({exportValue: ""});
-        // this.props.setNodes([{"id":0,"label":"2","title":0},{"id":1,"label":"3","title":1},{"id":2,"label":"2","title":2},{"id":3,"label":"1","title":3},{"id":4,"label":"1","title":4},{"id":5,"label":"3","title":5},{"id":6,"label":"2","title":6},{"id":7,"label":"3","title":7},{"id":8,"label":"1","title":8}]);
-        this.props.setNodes([{"id":0,"label":"3","title":0},{"id":1,"label":"5","title":1},{"id":2,"label":"1","title":2},{"id":3,"label":"2","title":3}]);
-        this.props.setEdges([
-            {
-                "id": 0,
-                "label": "1",
-                "from": 0,
-                "to": 3
-            },
-            {
-                "id": 1,
-                "label": "5",
-                "from": 1,
-                "to": 3
-            },
-            {
-                "id": 2,
-                "label": "2",
-                "from": 2,
-                "to": 3
-            }
-        ]);
-        // this.props.setEdges([{"id":0,"label":"2","from":0,"to":4},{"id":1,"label":"1","from":0,"to":6},{"id":2,"label":"3","from":1,"to":4},{"id":3,"label":"2","from":1,"to":7},{"id":4,"label":"2","from":2,"to":7},{"id":5,"label":"4","from":2,"to":5},{"id":6,"label":"1","from":3,"to":5},{"id":7,"label":"2","from":3,"to":8},{"id":8,"label":"1","from":4,"to":6}]);
+        this.props.setNodes([{"id":0,"label":"2","title":0},{"id":1,"label":"3","title":1},{"id":2,"label":"2","title":2},{"id":3,"label":"1","title":3},{"id":4,"label":"1","title":4},{"id":5,"label":"3","title":5},{"id":6,"label":"2","title":6},{"id":7,"label":"3","title":7},{"id":8,"label":"1","title":8}]);
+        // this.props.setNodes([{"id":0,"label":"3","title":0},{"id":1,"label":"5","title":1},{"id":2,"label":"1","title":2},{"id":3,"label":"2","title":3}]);
+        // this.props.setEdges([
+        //     {
+        //         "id": 0,
+        //         "label": "1",
+        //         "from": 0,
+        //         "to": 3
+        //     },
+        //     {
+        //         "id": 1,
+        //         "label": "5",
+        //         "from": 1,
+        //         "to": 3
+        //     },
+        //     {
+        //         "id": 2,
+        //         "label": "2",
+        //         "from": 2,
+        //         "to": 3
+        //     }
+        // ]);
+        this.props.setEdges([{"id":0,"label":"2","from":0,"to":4},{"id":1,"label":"1","from":0,"to":6},{"id":2,"label":"3","from":1,"to":4},{"id":3,"label":"2","from":1,"to":7},{"id":4,"label":"2","from":2,"to":7},{"id":5,"label":"4","from":2,"to":5},{"id":6,"label":"1","from":3,"to":5},{"id":7,"label":"2","from":3,"to":8},{"id":8,"label":"1","from":4,"to":6}]);
     }
 
     componentDidUpdate(prevProps) {

@@ -55,7 +55,8 @@ export default class Planning extends Component {
                     actionsList: [],
                     computing: "",
                     completedComputing: [],
-                    writing: ''
+                    writing: '',
+                    becameFree: 0,
                 });
             }
 
@@ -326,6 +327,7 @@ export default class Planning extends Component {
 
             processorToSetFree[processing] = '';
             processorToSetFree.isFree = true;
+            processorToSetFree.becameFree = tact;
             if (processing === 'computing') {
                 processorToSetFree.completedComputing.push(node.id);
                 processorToSetFree.shouldCompute = null;
@@ -365,7 +367,7 @@ export default class Planning extends Component {
         const {nodes, sourceNodes, queueIds, edges} = this.props;
 
         const updatedQueue = [...queue];
-        const updatedProcessors = [...processors];
+        const updatedProcessors = [...processors].sort((a, b) => a.becameFree - b.becameFree);
         const updatedBanks = [...banks];
 
         const freeBanks = updatedBanks.filter(bank => bank.isFree);
