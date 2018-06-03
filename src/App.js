@@ -57,8 +57,8 @@ class App extends Component {
             message: "",
             testResults: "",
 
-            queue5: [],
-            queue5Ids: [],
+            queue: [],
+            queueIds: [],
             sourceNodes: [],
 
             processors: null,
@@ -105,6 +105,7 @@ class App extends Component {
 
         this.getLinks = this.getLinks.bind(this);
 
+        this.calculate_14 = this.calculate_14.bind(this);
         this.test_14 = this.test_14.bind(this);
 
         this.calculate_9 = this.calculate_9.bind(this);
@@ -117,7 +118,6 @@ class App extends Component {
 
         this.handleChangeNumberOfProcessors = this.handleChangeNumberOfProcessors.bind(this);
         this.handleChangeNumberOfBanks = this.handleChangeNumberOfBanks.bind(this);
-        // this.handleSubmitParameters = this.handleSubmitParameters.bind(this);
     }
 
     componentDidMount() {
@@ -590,18 +590,64 @@ class App extends Component {
         this.setState({nodesWithLinks: nodesWithLinks});
     }
 
-    test_14() {
-        const {nodes} = this.state;
+    calculate_14() {
+        const {nodes, nodesWithLinks} = this.state;
         const sortedNodes = sortByLabel(nodes);
+        const copyNodesWithLinks = [...nodesWithLinks];
+
+        const sortedQueue = copyNodesWithLinks.map(node => {
+            const accordingNodeFromQueue = sortedNodes.find(element => element.id == node.id);
+            node.label = accordingNodeFromQueue.label;
+            return node
+        });
+
+        return sortedQueue
+    }
+    test_14() {
+        const {edges, nodesWithLinks} = this.state;
+        const sortedNodes = this.calculate_14();
+        const queue = [...sortedNodes];
+        const queueIds = [];
+
+        const graph = new Graph();
+
+        nodesWithLinks.forEach(node => graph.addNewVertex(node.id));
+
+        nodesWithLinks.forEach(node => {
+            if (node.links.length > 0) {
+                node.links.forEach(link => graph.createNewEdge(node.id, link));
+            }
+        });
+
+        let sourceNodes = [];
+        for (let [key] of graph.sources()) {
+            sourceNodes.push(key);
+        }
+
         let result = "Test 14:\n";
 
         sortedNodes.forEach(node => {
             result += node.id + "(" + node.label + ")  ";
         });
 
-        this.setState({
-            testResults: result
+        queue.forEach(node => {
+            queueIds.push(`${node.id}`);
+
+            edges.forEach(edge => {
+                if (edge.to == node.id) {
+                    if (Array.isArray(node.parents)) {
+                        node.parents.push(`${edge.from}`);
+                    } else {
+                        node.parents = [`${edge.from}`]
+                    }
+                }
+            })
         });
+
+        console.log("queue", queue);
+        console.log("queueIds", queueIds);
+
+        this.setState({testResults: result, queue, queueIds, sourceNodes});
     }
 
     calculate_9() {
@@ -649,12 +695,16 @@ class App extends Component {
                 }
             });
         });
+        this.setState({sourceNodes: sourceVertices});
 
         return sortByMaxLength([...sourceNodes, ...notSourceNodes]);
     }
 
     test_9() {
+        const {edges} = this.state;
         const sortedNodes = this.calculate_9();
+        const queue = [...sortedNodes];
+        const queueIds = [];
 
         let result = "Test 9:\n";
 
@@ -662,7 +712,24 @@ class App extends Component {
             result += node.id + "(" + node.maxLength + ")  ";
         });
 
-        this.setState({testResults: result});
+        queue.forEach(node => {
+            queueIds.push(`${node.id}`);
+
+            edges.forEach(edge => {
+                if (edge.to == node.id) {
+                    if (Array.isArray(node.parents)) {
+                        node.parents.push(`${edge.from}`);
+                    } else {
+                        node.parents = [`${edge.from}`]
+                    }
+                }
+            })
+        });
+
+        console.log("queue", queue);
+        console.log("queueIds", queueIds);
+
+        this.setState({testResults: result, queue, queueIds});
     }
 
     calculate_5() {
@@ -726,7 +793,7 @@ class App extends Component {
     }
 
     test_5() {
-        const {nodes, edges, nodesWithLinks} = this.state;
+        const {edges, nodesWithLinks} = this.state;
         const {sortedNodes, criticalPath} = this.calculate_5();
 
         let result = "Test 5:\n";
@@ -749,7 +816,6 @@ class App extends Component {
 
             edges.forEach(edge => {
                 if (edge.to == node.id) {
-                    // node.parents = Array.isArray(node.parents) ? [...edge.to];
                     if (Array.isArray(node.parents)) {
                         node.parents.push(`${edge.from}`);
                     } else {
@@ -762,7 +828,7 @@ class App extends Component {
         console.log("queue", queue);
         console.log("queueIds", queueIds);
 
-        this.setState({testResults: result, queue5: queue, queue5Ids: queueIds});
+        this.setState({testResults: result, queue, queueIds});
     }
 
     resetGraph(callback) {
@@ -802,8 +868,8 @@ class App extends Component {
             idSysEdgeEdit,
 
             testResults,
-            queue5,
-            queue5Ids,
+            queue,
+            queueIds,
             sourceNodes,
             processors,
             banks
@@ -1019,8 +1085,8 @@ class App extends Component {
                           testResults={testResults}
                         />
                       <Planning
-                        queue={queue5}
-                        queueIds={queue5Ids}
+                        queue={queue}
+                        queueIds={queueIds}
                         nodes={nodes}
                         edges={edges}
                         sourceNodes={sourceNodes}

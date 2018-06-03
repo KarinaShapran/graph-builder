@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 
 const shuffle = (array) => {
-    // return array
+    return array
     var currentIndex = array.length, temporaryValue, randomIndex;
 
     // While there remain elements to shuffle...
@@ -73,10 +73,8 @@ export default class Planning extends Component {
                 banks: generatedBanks
             });
         }
-
-        if (!prevProps.queue.length && this.props.queue.length) {
-            console.log(this.props.queue);
-
+        if (prevProps.queue && this.props.queue && !prevProps.queue.length && this.props.queue.length) {
+            // console.log(this.props.queue);
             const queueWithoutMaxLength = this.props.queue.map(queueNode => {
                 const {maxLength, links, parents, ...rest} = queueNode;
 
@@ -112,8 +110,6 @@ export default class Planning extends Component {
         } else if (this.props.queue.length) {
             this.modeling();
         }
-
-
     }
 
     isParentsDataComputed(queue, node) {
