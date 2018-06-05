@@ -1,7 +1,9 @@
 import React, {Component} from 'react';
 
 const shuffle = (array) => {
-    return array
+    // return array
+
+    //Random
     var currentIndex = array.length, temporaryValue, randomIndex;
 
     // While there remain elements to shuffle...
@@ -75,9 +77,8 @@ export default class Planning extends Component {
             });
         }
         if (prevProps.queue && this.props.queue && !prevProps.queue.length && this.props.queue.length) {
-            // console.log(this.props.queue);
             const queueWithoutMaxLength = this.props.queue.map(queueNode => {
-                const {maxLength, links, parents, ...rest} = queueNode;
+                const {links, parents, ...rest} = queueNode;
 
                 if (parents) {
                     const parentsArr = [];
@@ -87,7 +88,6 @@ export default class Planning extends Component {
                             isRead: false,
                         })
                     });
-
                     return {...rest, links: parents, linksArr: parentsArr, outcomingLinks: links};
                 }
                 return {...rest, outcomingLinks: links};
@@ -137,7 +137,7 @@ export default class Planning extends Component {
         return true
     }
 
-    startWriting(updatedQueue, freeBanks, freeProcessors, queueIds, edges, tact) {
+        startWriting(updatedQueue, freeBanks, freeProcessors, queueIds, edges, tact) {
         const computedNodes = updatedQueue.filter(queueNode => queueNode.isComputed && !queueNode.isWritten);
 
         shuffle(freeProcessors).forEach(freeProcessor => {
@@ -146,7 +146,7 @@ export default class Planning extends Component {
 
                 if (freeProcessor.isFree && computedNode.writeStarted === undefined && reallyFreeBank) {
                     const connectedNodesStatusList = [];
-                    let minQueueIndex = 9999;
+
                     computedNode.outcomingLinks.forEach(outcomingLink => {
                         const connectedNode = updatedQueue.find(qN => qN.id === outcomingLink);
                         connectedNodesStatusList.push({
@@ -197,36 +197,6 @@ export default class Planning extends Component {
                 return false;
             });
 
-            // if (freeProcessor.banksWithData && freeProcessor.banksWithData.length) {
-            //     // debugger
-            //     const nodeThatNeedData = updatedQueue.find(qN => qN.id === freeProcessor.nodeThatRequireDataId);
-            //     const realBanksWithData  = nodeThatNeedData.linksArr.filter(parent => !parent.isRead).map(parent => {
-            //         return updatedBanks.find(bank => bank.data.includes(parent.id)).id
-            //     });
-            //     console.log('realBanksWithData', realBanksWithData);
-            //
-            //     const freeBankWithData = realBanksWithData
-            //       .map(bankWithDataId => updatedBanks.find(bank => bank.id === bankWithDataId))
-            //       .find(bankWithData => bankWithData.isFree);
-            //
-            //
-            //     if (freeBankWithData) {
-            //         const parents = updatedQueue.find(qN => qN.id === freeProcessor.nodeThatRequireDataId).linksArr;
-            //         // debugger
-            //         const parentToReadId = parents.find(parent => freeBankWithData.data.includes(parent.id)).id;
-            //         const parentToRead = updatedQueue.find(qN => qN.id === parentToReadId);
-            //         const nodeThatRequireData = updatedQueue.find(qN => qN.id === freeProcessor.nodeThatRequireDataId);
-            //
-            //         this.startReading({parentToRead, freeProcessor, bankWithData: freeBankWithData, tact, nodeThatRequireData});
-            //         freeProcessor.banksWithData = null;
-            //         freeProcessor.nodeThatRequireDataId = '';
-            //     } else {
-            //         freeProcessor.actionsList.push(`${tact}|`);
-            //     }
-            //
-            //     return null
-            // }
-
             if (freeProcessor.shouldCompute) {
                 // Get first node from queue which is readyToCompute, is not started
                 const nodeToCompute = updatedQueue.find(
@@ -241,7 +211,6 @@ export default class Planning extends Component {
                     freeProcessor.computing = nodeToCompute.id;
                     freeProcessor.actionsList.push(nodeToCompute.id)
                 }
-
                 return null;
             }
 
@@ -257,7 +226,6 @@ export default class Planning extends Component {
                         parentToRead = updatedQueue.find(queueNode => queueNode.id === parent.id);
                         return true;
                     }
-
                     return false;
                 });
 
@@ -475,7 +443,6 @@ export default class Planning extends Component {
                 processors: updatedProcessors
             });
         }
-
     }
 
 
@@ -493,7 +460,6 @@ export default class Planning extends Component {
                   } else {
                       return null;
                   }
-
               })
               }
               {this.state.processors.map(processor => {

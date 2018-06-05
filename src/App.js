@@ -62,7 +62,9 @@ class App extends Component {
             sourceNodes: [],
 
             processors: null,
-            banks: null
+            banks: null,
+
+            criticalPathByWeight: {}
         };
 
         this.handleChangeNodeWeight = this.handleChangeNodeWeight.bind(this);
@@ -118,6 +120,8 @@ class App extends Component {
 
         this.handleChangeNumberOfProcessors = this.handleChangeNumberOfProcessors.bind(this);
         this.handleChangeNumberOfBanks = this.handleChangeNumberOfBanks.bind(this);
+
+        this.findCriticalPath = this.findCriticalPath.bind(this);
     }
 
     componentDidMount() {
@@ -590,7 +594,80 @@ class App extends Component {
         this.setState({nodesWithLinks: nodesWithLinks});
     }
 
+    findCriticalPath() {
+    const {nodesWithLinks, nodes} = this.state;
+    const graph = new Graph();
+
+    const updatedNodes = nodesWithLinks.map(nodeWithLink => {
+      const nodeWithWeight = nodes.find(node => node.id == nodeWithLink.id);
+      return {...nodeWithLink, weight: nodeWithWeight.label}
+    });
+
+    nodesWithLinks.forEach(node => graph.addNewVertex(node.id));
+
+    nodesWithLinks.forEach(node => {
+      if (node.links.length > 0) {
+        node.links.forEach(link => graph.createNewEdge(node.id, link));
+      }
+    });
+
+    let sinkVertices = [];
+    for (let [key] of graph.sinks()) {
+      sinkVertices.push(key);
+    }
+
+    let sourceNodes = [];
+    for (let [key] of graph.sources()) {
+      sourceNodes.push(key);
+    }
+
+    updatedNodes.forEach(node => {
+      sourceNodes.forEach(vertice => {
+        if (node.id === vertice) {
+          node.maxPath = node.weight;
+        }
+      });
+    });
+
+    updatedNodes.map(node => node.maxPath ? "" : node.maxPath = "");
+
+    const sourceVertices = updatedNodes.filter(node => !sinkVertices.includes(node.id));
+
+    let criticalPathSum = null;
+    let criticalPath = [];
+    sourceVertices.forEach(source => {
+      sinkVertices.forEach(sink => {
+        let paths = [];
+
+        for (let path of graph.paths(source.id, sink)) {
+          paths.push(path);
+
+          let pathWeightsSum = null;
+          path.forEach(vertice => {
+            const node = updatedNodes.find(n => n.id == vertice);
+            pathWeightsSum += node.weight;
+          });
+
+          if (pathWeightsSum >= criticalPathSum) {
+            criticalPathSum = pathWeightsSum;
+            criticalPath = path;
+          }
+
+          if (criticalPathSum > source.maxPath){
+            source.maxPath = criticalPathSum;
+          }
+        }
+      });
+    });
+
+    this.setState({
+        criticalPathByWeight: {value: criticalPathSum, path: criticalPath}
+        }, () => console.log("Critical path:", this.state.criticalPathByWeight)
+    );
+  }
+
     calculate_14() {
+        this.findCriticalPath();
         const {nodes, nodesWithLinks} = this.state;
         const sortedNodes = sortByLabel(nodes);
         const copyNodesWithLinks = [...nodesWithLinks];
@@ -603,6 +680,7 @@ class App extends Component {
 
         return sortedQueue
     }
+
     test_14() {
         const {edges, nodesWithLinks} = this.state;
         const sortedNodes = this.calculate_14();
@@ -651,6 +729,7 @@ class App extends Component {
     }
 
     calculate_9() {
+        this.findCriticalPath();
         //Getting vertices that have no incoming edges (source vertices)
         const {nodesWithLinks} = this.state;
         const graph = new Graph();
@@ -733,6 +812,7 @@ class App extends Component {
     }
 
     calculate_5() {
+        this.findCriticalPath();
         //Getting vertices that have no outgoing edges (sink vertices)
         const {nodesWithLinks} = this.state;
         const graph = new Graph();
@@ -1091,7 +1171,9 @@ class App extends Component {
                         edges={edges}
                         sourceNodes={sourceNodes}
                         processors={processors}
+                        // processors={5}
                         banks={banks}
+                        // banks={3}
                       />
                     </div>
 
